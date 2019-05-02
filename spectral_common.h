@@ -16,8 +16,9 @@
 
 #ifndef SPECTRAL_COMMON_H
 #define SPECTRAL_COMMON_H
-#include <cstdint>
+
 #include <linux/types.h>
+#include <cstdint>
 
 #define SPECTRAL_HT20_NUM_BINS		56
 #define SPECTRAL_HT20_40_NUM_BINS		128
@@ -43,7 +44,7 @@ enum ath_fft_sample_type {
 
 struct fft_sample_tlv {
 	uint8_t type;	/* see ath_fft_sample */
-	uint16_t length;
+	__be16 length;
 	/* type dependent data follows */
 } __attribute__((packed));
 
@@ -52,11 +53,11 @@ struct fft_sample_ht20 {
 
 	uint8_t max_exp;
 
-	uint16_t freq;
+	__be16 freq;
 	int8_t rssi;
 	int8_t noise;
 
-	uint16_t max_magnitude;
+	__be16 max_magnitude;
 	uint8_t max_index;
 	uint8_t bitmap_weight;
 
@@ -69,7 +70,7 @@ struct fft_sample_ht20_40 {
 	struct fft_sample_tlv tlv;
 
 	uint8_t channel_type;
-	uint16_t freq;
+	__be16 freq;
 
 	int8_t lower_rssi;
 	int8_t upper_rssi;
@@ -79,8 +80,8 @@ struct fft_sample_ht20_40 {
 	int8_t lower_noise;
 	int8_t upper_noise;
 
-	uint16_t lower_max_magnitude;
-	uint16_t upper_max_magnitude;
+	__be16 lower_max_magnitude;
+	__be16 upper_max_magnitude;
 
 	uint8_t lower_max_index;
 	uint8_t upper_max_index;
@@ -96,12 +97,12 @@ struct fft_sample_ht20_40 {
 struct fft_sample_ath10k {
 	struct fft_sample_tlv tlv;
 	uint8_t chan_width_mhz;
-	uint16_t freq1;
-	uint16_t freq2;
-	uint16_t noise;
-	uint16_t max_magnitude;
-	uint16_t total_gain_db;
-	uint16_t base_pwr_db;
+	__be16 freq1;
+	__be16 freq2;
+	__be16 noise;
+	__be16 max_magnitude;
+	__be16 total_gain_db;
+	__be16 base_pwr_db;
 	__be64 tsf;
 	int8_t max_index;
 	uint8_t rssi;
