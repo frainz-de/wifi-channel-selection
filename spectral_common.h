@@ -1,0 +1,114 @@
+/*
+ * Copyright (c) 2013 Qualcomm Atheros, Inc.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+#ifndef SPECTRAL_COMMON_H
+#define SPECTRAL_COMMON_H
+#include <cstdint>
+
+#define SPECTRAL_HT20_NUM_BINS		56
+#define SPECTRAL_HT20_40_NUM_BINS		128
+
+/* TODO: could possibly be 512, but no samples this large
+ * could be acquired so far.
+ */
+#define SPECTRAL_ATH10K_MAX_NUM_BINS		256
+
+/* FFT sample format given to userspace via debugfs.
+ *
+ * Please keep the type/length at the front position and change
+ * other fields after adding another sample type
+ *
+ * TODO: this might need rework when switching to nl80211-based
+ * interface.
+ */
+enum ath_fft_sample_type {
+	ATH_FFT_SAMPLE_HT20 = 1,
+	ATH_FFT_SAMPLE_HT20_40,
+	ATH_FFT_SAMPLE_ATH10K,
+};
+
+struct fft_sample_tlv {
+	uint8_t type;	/* see ath_fft_sample */
+	uint16_t length;
+	/* type dependent data follows */
+} __packed;
+
+struct fft_sample_ht20 {
+	struct fft_sample_tlv tlv;
+
+	uint8_t max_exp;
+
+	uint16_t freq;
+	int8_t rssi;
+	int8_t noise;
+
+	uint16_t max_magnitude;
+	uint8_t max_index;
+	uint8_t bitmap_weight;
+
+	__be64 tsf;
+
+	uint8_t data[SPECTRAL_HT20_NUM_BINS];
+} __packed;
+
+struct fft_sample_ht20_40 {
+	struct fft_sample_tlv tlv;
+
+	uint8_t channel_type;
+	uint16_t freq;
+
+	int8_t lower_rssi;
+	int8_t upper_rssi;
+
+	__be64 tsf;
+
+	int8_t lower_noise;
+	int8_t upper_noise;
+
+	uint16_t lower_max_magnitude;
+	uint16_t upper_max_magnitude;
+
+	uint8_t lower_max_index;
+	uint8_t upper_max_index;
+
+	uint8_t lower_bitmap_weight;
+	uint8_t upper_bitmap_weight;
+
+	uint8_t max_exp;
+
+	uint8_t data[SPECTRAL_HT20_40_NUM_BINS];
+} __packed;
+
+struct fft_sample_ath10k {
+	struct fft_sample_tlv tlv;
+	uint8_t chan_width_mhz;
+	uint16_t freq1;
+	uint16_t freq2;
+	uint16_t noise;
+	uint16_t max_magnitude;
+	uint16_t total_gain_db;
+	uint16_t base_pwr_db;
+	__be64 tsf;
+	int8_t max_index;
+	uint8_t rssi;
+	uint8_t relpwr_db;
+	uint8_t avgpwr_db;
+	uint8_t max_exp;
+
+	uint8_t data[0];
+} __packed;
+
+#endif /* SPECTRAL_COMMON_H */
