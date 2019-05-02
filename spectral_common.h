@@ -17,6 +17,7 @@
 #ifndef SPECTRAL_COMMON_H
 #define SPECTRAL_COMMON_H
 #include <cstdint>
+#include <linux/types.h>
 
 #define SPECTRAL_HT20_NUM_BINS		56
 #define SPECTRAL_HT20_40_NUM_BINS		128
@@ -44,7 +45,7 @@ struct fft_sample_tlv {
 	uint8_t type;	/* see ath_fft_sample */
 	uint16_t length;
 	/* type dependent data follows */
-} __packed;
+} __attribute__((packed));
 
 struct fft_sample_ht20 {
 	struct fft_sample_tlv tlv;
@@ -62,7 +63,7 @@ struct fft_sample_ht20 {
 	__be64 tsf;
 
 	uint8_t data[SPECTRAL_HT20_NUM_BINS];
-} __packed;
+} __attribute__((packed));
 
 struct fft_sample_ht20_40 {
 	struct fft_sample_tlv tlv;
@@ -90,7 +91,7 @@ struct fft_sample_ht20_40 {
 	uint8_t max_exp;
 
 	uint8_t data[SPECTRAL_HT20_40_NUM_BINS];
-} __packed;
+} __attribute__((packed));
 
 struct fft_sample_ath10k {
 	struct fft_sample_tlv tlv;
@@ -109,6 +110,6 @@ struct fft_sample_ath10k {
 	uint8_t max_exp;
 
 	uint8_t data[0];
-} __packed;
+} __attribute__((packed));
 
 #endif /* SPECTRAL_COMMON_H */
