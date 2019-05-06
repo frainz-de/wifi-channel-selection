@@ -10,8 +10,7 @@ int main(int, char*[]) {
     std::ifstream scanfile;
     scanfile.open("/sys/kernel/debug/ieee80211/phy1/ath10k/spectral_scan0");
     if(scanfile.fail()) {
-        std::cerr << "Failed to read file\n";
-        std::cerr << "Error: " << strerror(errno) << std::endl;
+        std::cerr << "Failed to read file: " << strerror(errno) << std::endl;
         return 1;
     }
 
