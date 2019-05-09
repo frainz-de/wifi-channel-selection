@@ -6,7 +6,6 @@ extern "C" {
 #include <cstring>
 
 int main(int, char*[]) {
-    //std::ifstream scanfile("/sys/kernel/debug/ieee80211/phy1/ath10k");
     std::ifstream scanfile;
     scanfile.open("/sys/kernel/debug/ieee80211/phy1/ath10k/spectral_scan0",std::fstream::in | std::fstream::binary);
     if(scanfile.fail()) {
@@ -15,14 +14,17 @@ int main(int, char*[]) {
     }
 
 
-    auto header = new fft_sample_tlv;
-    //auto header = static_cast<fft_sample_tlv*>(headerbuffer);
-    scanfile.read((char*)header, sizeof(fft_sample_tlv));
-    uint8_t type = header->type;
-    std::cout << "type: " << unsigned(type) << std::endl;
+    auto sample = new fft_sample_ath10k;
+    auto header = &(sample->tlv);
+    scanfile.read((char*)header, sizeof(fft_sample_tlv)); //read in header
+    std::cout << "type: " << unsigned(header->type) << std::endl;
     std::cout << "length: " << be16toh(header->length) << std::endl;
+    if(sample->tlv.type != 3) {
+        std::cerr << "Wrong sample type, only ath10k samples are supportet atm\n";
+        return 2;
+    }
 
-    std::cout << "size of fft_sample_ath10k: " << sizeof(fft_sample_ath10k) << std::endl;
+    scanfile.read((char*)sample + sizeof(*header), sizeof(*sample) - sizeof(*header));
 
     scanfile.close();
 
