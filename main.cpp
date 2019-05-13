@@ -9,6 +9,11 @@ extern "C" {
 
 fft_sample_ath10k* readSample(std::ifstream &scanfile) {
 
+    scanfile.peek(); // check for EOF
+    if(scanfile.eof()) {
+        throw std::runtime_error("EOF reached");
+    }
+
     auto sample = new fft_sample_ath10k;
     scanfile.read((char*)&sample->tlv, sizeof(fft_sample_tlv)); //read in header
     std::cout << "type: " << unsigned(sample->tlv.type) << std::endl;
@@ -21,6 +26,10 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile) {
     auto data = new char[be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv)];
 //    scanfile.read(data, be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv));
     scanfile.read(data, 64);
+
+
+
+    scanfile.peek(); //set EOF bit if no data available
     return sample;
 }
 
@@ -38,7 +47,9 @@ int main(int argc, char* argv[]) {
         std::cerr << "Failed to read file: " << strerror(errno) << std::endl;
         return 1;
     }
-    readSample(scanfile);
+    while(!scanfile.eof()) {
+        readSample(scanfile);
+    }
 
 
     // scanfile.close(); // the destructor does this for us
