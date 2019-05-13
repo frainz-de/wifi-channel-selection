@@ -15,17 +15,18 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile) {
     }
 
     auto sample = new fft_sample_ath10k;
-    scanfile.read((char*)&sample->tlv, sizeof(fft_sample_tlv)); //read in header
+    scanfile.read((char*)&sample->tlv, sizeof(fft_sample_tlv)); //read TLV header
     std::cout << "type: " << unsigned(sample->tlv.type) << std::endl;
     std::cout << "length: " << be16toh(sample->tlv.length) << std::endl;
-    if(sample->tlv.type != 3) {
+    if(sample->tlv.type != ATH_FFT_SAMPLE_ATH10K) {
         throw std::runtime_error("Wrong sample type, only ath10k samples are supportet atm\n");
     }
 
+    // read rest of header
     scanfile.read((char*)sample + sizeof(fft_sample_tlv), sizeof(*sample) - sizeof(fft_sample_tlv));
+    // create buffer and fill it with sample data
     auto data = new char[be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv)];
-//    scanfile.read(data, be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv));
-    scanfile.read(data, 64);
+    scanfile.read(data, be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv));
 
 
 
