@@ -6,6 +6,9 @@ extern "C" {
 #include <cstring>
 #include <stdio.h>
 #include <unistd.h>
+#include <chrono>
+#include <iomanip>
+#include <Eigen/Dense>
 
 fft_sample_ath10k* readSample(std::ifstream &scanfile) {
 
@@ -24,7 +27,7 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile) {
 
     // read rest of header
     scanfile.read((char*)sample + sizeof(fft_sample_tlv), sizeof(*sample) - sizeof(fft_sample_tlv));
-    // create buffer and fill it with sample data
+    // create buffer
     auto data = new char[be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv)];
     scanfile.read(data, be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv));
 
@@ -37,19 +40,33 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile) {
 int main(int argc, char* argv[]) {
     std::string path = "/sys/kernel/debug/ieee80211/phy1/ath10k/spectral_scan0";
 
+    // hacky argument handling
     if(argc > 1) {
         path = argv[1];
     }
 
-
+    // try to open (virtual) file in binary mode
     std::ifstream scanfile;
     scanfile.open(path ,std::fstream::in | std::fstream::binary);
     if(scanfile.fail()) {
         std::cerr << "Failed to read file: " << strerror(errno) << std::endl;
         return 1;
     }
-    while(!scanfile.eof()) {
-        readSample(scanfile);
+
+    while (true) {
+        auto now =  std::chrono::system_clock::now();
+        auto in_time_t = std::chrono::system_clock::to_time_t(now);
+        //auto localtime = std::localtime(&in_time_t);
+        //std::cout << std::put_time(localtime, "%Y-%m-%d %X");
+        std::cout << std::ctime(&in_time_t) << std::endl;
+
+        scanfile.peek();
+        while(!scanfile.eof()) {
+            readSample(scanfile);
+        }
+        sleep(1);
+        std::cout << "waiting\n";
+        scanfile.clear();
     }
 
 
