@@ -26,12 +26,11 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile) {
     }
 
     // read rest of header
-    scanfile.read((char*)sample + sizeof(fft_sample_tlv), sizeof(*sample) - sizeof(fft_sample_tlv));
+    scanfile.read((char*)sample + sizeof(fft_sample_tlv), sizeof(fft_sample_ath10k) - sizeof(fft_sample_tlv));
     // create buffer
-    auto data = new char[be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv)];
-    scanfile.read(data, be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv));
-
-
+    size_t datalength = be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv);
+    auto data = new char[datalength];
+    scanfile.read(data, datalength );
 
     scanfile.peek(); //set EOF bit if no data available
     return sample;
@@ -52,6 +51,15 @@ int main(int argc, char* argv[]) {
         std::cerr << "Failed to read file: " << strerror(errno) << std::endl;
         return 1;
     }
+
+    //remove characters until valid header is found
+    if(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K) {
+        std::cerr << "Invalid header, discarding until valid\n";
+    }
+    while(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K) {
+        scanfile.ignore(1);
+    }
+
 
     while (true) {
         auto now =  std::chrono::system_clock::now();
