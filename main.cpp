@@ -33,16 +33,22 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample> &rece
 
     // create buffer and read in the FFT bins
     auto datalength = be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv);
-    auto data = new uint8_t[datalength];
-    scanfile.read((char*)data, datalength);
+    auto readSample = new Sample(datalength);
+
+//    auto data = new uint8_t[datalength];
+    scanfile.read((char*) readSample->data, datalength);
 
     // calculate signal strength
     int squaresum = 0;
     for (decltype(datalength) i = 0; i < datalength; i++) {
-        int value = data[i] << sample->max_exp;
+        int value = readSample->data[i] << sample->max_exp;
         squaresum += (value*value);
     }
     //float power = sample->noise + sample->rssi + 20 *
+
+    // fill Sample object
+    readSample->rssi = sample->rssi;
+    readSample->noise = be16toh(sample->noise);
 
 
     scanfile.peek(); //set EOF bit if no data available
