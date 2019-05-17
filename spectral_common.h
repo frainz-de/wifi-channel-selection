@@ -95,9 +95,9 @@ struct fft_sample_ht20_40 {
 } __attribute__((packed));
 
 struct fft_sample_ath10k {
-	struct fft_sample_tlv tlv;
+	struct fft_sample_tlv tlv; // type length value header
 	uint8_t chan_width_mhz;
-	__be16 freq1;
+	__be16 freq1; // center frequency
 	__be16 freq2;
 	__be16 noise;
 	__be16 max_magnitude;

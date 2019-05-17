@@ -9,8 +9,11 @@ extern "C" {
 #include <chrono>
 #include <iomanip>
 #include <Eigen/Dense>
+#include "sample.h"
 
-fft_sample_ath10k* readSample(std::ifstream &scanfile) {
+using DataPoint = std::tuple<int, double>;
+
+fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample> &received_series) {
 
     scanfile.peek(); // check for EOF
     if(scanfile.eof()) {
@@ -27,10 +30,20 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile) {
 
     // read rest of header
     scanfile.read((char*)sample + sizeof(fft_sample_tlv), sizeof(fft_sample_ath10k) - sizeof(fft_sample_tlv));
-    // create buffer
-    size_t datalength = be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv);
-    auto data = new char[datalength];
-    scanfile.read(data, datalength );
+
+    // create buffer and read in the FFT bins
+    auto datalength = be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv);
+    auto data = new uint8_t[datalength];
+    scanfile.read((char*)data, datalength);
+
+    // calculate signal strength
+    int squaresum = 0;
+    for (decltype(datalength) i = 0; i < datalength; i++) {
+        int value = data[i] << sample->max_exp;
+        squaresum += (value*value);
+    }
+    //float power = sample->noise + sample->rssi + 20 *
+
 
     scanfile.peek(); //set EOF bit if no data available
     return sample;
@@ -60,6 +73,7 @@ int main(int argc, char* argv[]) {
         scanfile.ignore(1);
     }
 
+    std::vector<Sample> received_series;
 
     while (true) {
         auto now =  std::chrono::system_clock::now();
@@ -70,7 +84,8 @@ int main(int argc, char* argv[]) {
 
         scanfile.peek();
         while(!scanfile.eof()) {
-            readSample(scanfile);
+            auto sample = readSample(scanfile, received_series);
+            delete sample; // looks like we don't need it here
         }
         sleep(1);
         std::cout << "waiting\n";
