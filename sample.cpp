@@ -12,5 +12,5 @@ Sample::~Sample() {
 
 void Sample::output(std::ostream &stream) {
     long timecount = timestamp.count();
-    stream << timecount << "," << unsigned(rssi) << ";\n";
+    stream << timecount << "," << unsigned(rssi) << "," << unsigned(center_freq) << ";\n";
 }

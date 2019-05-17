@@ -52,6 +52,7 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample*> &rec
     // fill Sample object
     readSample->rssi = sample->rssi;
     readSample->noise = be16toh(sample->noise);
+    readSample->center_freq = be16toh(sample->freq1);
 
     received_series.push_back(readSample);
 
@@ -112,10 +113,12 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout << "caught signal\n";
+    // output data
+    std::ofstream outputfile("specdata.csv");
     for (auto const& sample: received_series) {
-        sample->output(std::cout);
-//        std::cout << "printing sample\n";
+        sample->output(outputfile);
     }
+    outputfile.close();
 
     // scanfile.close(); // the destructor does this for us
     
