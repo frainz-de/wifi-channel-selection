@@ -8,10 +8,13 @@ extern "C" {
 #include <unistd.h>
 #include <chrono>
 #include <iomanip>
+#include <signal.h>
 #include <Eigen/Dense>
 #include "sample.h"
 
 using DataPoint = std::tuple<int, double>;
+
+bool running = true;
 
 fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample> &received_series) {
 
@@ -55,6 +58,12 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample> &rece
     return sample;
 }
 
+void signalHandler(int signal) {
+    if(signal == SIGINT) {
+        running = false;
+    }
+}
+
 int main(int argc, char* argv[]) {
     std::string path = "/sys/kernel/debug/ieee80211/phy1/ath10k/spectral_scan0";
 
@@ -62,6 +71,8 @@ int main(int argc, char* argv[]) {
     if(argc > 1) {
         path = argv[1];
     }
+
+    signal(SIGINT, signalHandler);
 
     // try to open (virtual) file in binary mode
     std::ifstream scanfile;
@@ -81,7 +92,7 @@ int main(int argc, char* argv[]) {
 
     std::vector<Sample> received_series;
 
-    while (true) {
+    while (running) {
         auto now =  std::chrono::system_clock::now();
         auto in_time_t = std::chrono::system_clock::to_time_t(now);
         //auto localtime = std::localtime(&in_time_t);
@@ -98,6 +109,7 @@ int main(int argc, char* argv[]) {
         scanfile.clear();
     }
 
+    std::cout << "caught signal\n";
 
     // scanfile.close(); // the destructor does this for us
     
