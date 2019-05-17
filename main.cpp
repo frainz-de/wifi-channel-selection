@@ -16,7 +16,7 @@ using DataPoint = std::tuple<int, double>;
 
 bool running = true;
 
-fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample> &received_series) {
+fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series) {
 
     scanfile.peek(); // check for EOF
     if(scanfile.eof()) {
@@ -53,6 +53,7 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample> &rece
     readSample->rssi = sample->rssi;
     readSample->noise = be16toh(sample->noise);
 
+    received_series.push_back(readSample);
 
     scanfile.peek(); //set EOF bit if no data available
     return sample;
@@ -90,7 +91,7 @@ int main(int argc, char* argv[]) {
         scanfile.ignore(1);
     }
 
-    std::vector<Sample> received_series;
+    std::vector<Sample*> received_series;
 
     while (running) {
         auto now =  std::chrono::system_clock::now();
@@ -107,9 +108,14 @@ int main(int argc, char* argv[]) {
         sleep(1);
         std::cout << "waiting\n";
         scanfile.clear();
+        //running = false;
     }
 
     std::cout << "caught signal\n";
+    for (auto const& sample: received_series) {
+        sample->output(std::cout);
+//        std::cout << "printing sample\n";
+    }
 
     // scanfile.close(); // the destructor does this for us
     
