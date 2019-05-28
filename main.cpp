@@ -13,6 +13,7 @@ extern "C" {
 #include "sample.h"
 
 using DataPoint = std::tuple<int, double>;
+using TxDataPoint = std::tuple<std::chrono::milliseconds, long>;
 
 bool running = true;
 
@@ -67,20 +68,29 @@ void signalHandler(int signal) {
 }
 
 int main(int argc, char* argv[]) {
-    std::string path = "/sys/kernel/debug/ieee80211/phy1/ath10k/spectral_scan0";
+    std::string scanpath = "/sys/kernel/debug/ieee80211/phy1/ath10k/spectral_scan0";
+    std::string txpath = "/sys/class/net/wlp5s0/statistics/tx_bytes";
 
     // hacky argument handling
     if(argc > 1) {
-        path = argv[1];
+        scanpath = argv[1];
     }
 
     signal(SIGINT, signalHandler);
 
     // try to open (virtual) file in binary mode
     std::ifstream scanfile;
-    scanfile.open(path ,std::fstream::in | std::fstream::binary);
+    scanfile.open(scanpath ,std::fstream::in | std::fstream::binary);
     if(scanfile.fail()) {
-        std::cerr << "Failed to read file: " << strerror(errno) << std::endl;
+        std::cerr << "Failed to open scan file: " << strerror(errno) << std::endl;
+        return 1;
+    }
+
+    // try to open network statistics file
+    std::ifstream txfile;
+    txfile.open(txpath, std::fstream::in);
+    if(txfile.fail()) {
+        std::cerr << "Failed to open network statistics file: " << strerror(errno) << std::endl;
         return 1;
     }
 
@@ -93,9 +103,11 @@ int main(int argc, char* argv[]) {
     }
 
     std::vector<Sample*> received_series;
+    std::vector<TxDataPoint> tx_series;
+    long last_tx_bytes;
 
     while (running) {
-        auto now =  std::chrono::system_clock::now();
+        auto now = std::chrono::system_clock::now();
         auto in_time_t = std::chrono::system_clock::to_time_t(now);
         //auto localtime = std::localtime(&in_time_t);
         //std::cout << std::put_time(localtime, "%Y-%m-%d %X");
@@ -104,8 +116,19 @@ int main(int argc, char* argv[]) {
         scanfile.peek();
         while(!scanfile.eof()) {
             auto sample = readSample(scanfile, received_series);
-            delete sample; // looks like we don't need it here
+            delete sample; // looks like we don't actually need it here
         }
+
+        // fill tx statistics vector
+        txfile.seekg(0);
+        std::string tx_bytes_string;
+        std::getline(txfile, tx_bytes_string);
+        long tx_bytes = std::stol(tx_bytes_string);
+        TxDataPoint txdatapoint(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()),
+                tx_bytes-last_tx_bytes);
+        last_tx_bytes = tx_bytes;
+        tx_series.push_back(txdatapoint);
+
         sleep(1);
         std::cout << "waiting\n";
         scanfile.clear();
@@ -114,11 +137,16 @@ int main(int argc, char* argv[]) {
 
     std::cout << "caught signal\n";
     // output data
-    std::ofstream outputfile("specdata.csv");
+    std::ofstream outputscanfile("specdata.csv");
     for (auto const& sample: received_series) {
-        sample->output(outputfile);
+        sample->output(outputscanfile);
     }
-    outputfile.close();
+    outputscanfile.close();
+
+    std::ofstream outputtxfile("txdata.csv");
+    for (auto const& datapoint: tx_series) {
+        outputtxfile << std::get<0>(datapoint).count() << ";" << std::get<1>(datapoint) << ";\n";
+    }
 
     // scanfile.close(); // the destructor does this for us
     
