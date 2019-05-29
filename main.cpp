@@ -17,6 +17,12 @@ using TxDataPoint = std::tuple<std::chrono::milliseconds, long>;
 
 bool running = true;
 
+static inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
 fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series) {
 
     scanfile.peek(); // check for EOF
@@ -26,8 +32,8 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample*> &rec
 
     auto sample = new fft_sample_ath10k;
     scanfile.read((char*)&sample->tlv, sizeof(fft_sample_tlv)); //read TLV header
-    std::cout << "type: " << unsigned(sample->tlv.type) << std::endl;
-    std::cout << "length: " << be16toh(sample->tlv.length) << std::endl;
+//    std::cout << "type: " << unsigned(sample->tlv.type) << std::endl;
+//    std::cout << "length: " << be16toh(sample->tlv.length) << std::endl;
     if(sample->tlv.type != ATH_FFT_SAMPLE_ATH10K) {
         throw std::runtime_error("Wrong sample type, only ath10k samples are supportet atm\n");
     }
@@ -107,17 +113,21 @@ int main(int argc, char* argv[]) {
     long last_tx_bytes;
 
     while (running) {
-        auto now = std::chrono::system_clock::now();
-        auto in_time_t = std::chrono::system_clock::to_time_t(now);
-        //auto localtime = std::localtime(&in_time_t);
-        //std::cout << std::put_time(localtime, "%Y-%m-%d %X");
-        std::cout << std::ctime(&in_time_t) << std::endl;
-
+        // read available samples
         scanfile.peek();
         while(!scanfile.eof()) {
             auto sample = readSample(scanfile, received_series);
             delete sample; // looks like we don't actually need it here
         }
+
+        // get current time
+        auto now = std::chrono::high_resolution_clock::now();
+        auto in_time_t = std::chrono::system_clock::to_time_t(now);
+        //std::cout << std::ctime(&in_time_t) << std::endl;
+        //std::cout << std::flush << "\r" << std::ctime(&in_time_t) << "\r" << std::flush;
+        std::string time = std::ctime(&in_time_t);
+        rtrim(time);
+        std::cout << std::flush << "\r" << time << std::flush;
 
         // fill tx statistics vector
         txfile.seekg(0);
@@ -130,19 +140,20 @@ int main(int argc, char* argv[]) {
         tx_series.push_back(txdatapoint);
 
         sleep(.1);
-        std::cout << "waiting\n";
+//        std::cout << "waiting\n";
         scanfile.clear();
         //running = false;
     }
 
     std::cout << "caught signal\n";
-    // output data
+    // output scan data
     std::ofstream outputscanfile("specdata.csv");
     for (auto const& sample: received_series) {
         sample->output(outputscanfile);
     }
     outputscanfile.close();
 
+    // output tx data
     std::ofstream outputtxfile("txdata.csv");
     for (auto const& datapoint: tx_series) {
         outputtxfile << std::get<0>(datapoint).count() << ";" << std::get<1>(datapoint) << ";\n";
