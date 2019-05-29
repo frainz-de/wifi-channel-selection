@@ -8,6 +8,7 @@ extern "C" {
 #include <unistd.h>
 #include <chrono>
 #include <iomanip>
+#include <thread>
 #include <signal.h>
 #include <Eigen/Dense>
 #include "sample.h"
@@ -111,12 +112,14 @@ int main(int argc, char* argv[]) {
     std::vector<Sample*> received_series;
     std::vector<TxDataPoint> tx_series;
     long last_tx_bytes;
+    int sample_count = 0;
 
     while (running) {
         // read available samples
         scanfile.peek();
         while(!scanfile.eof()) {
             auto sample = readSample(scanfile, received_series);
+            sample_count++;
             delete sample; // looks like we don't actually need it here
         }
 
@@ -127,7 +130,7 @@ int main(int argc, char* argv[]) {
         //std::cout << std::flush << "\r" << std::ctime(&in_time_t) << "\r" << std::flush;
         std::string time = std::ctime(&in_time_t);
         rtrim(time);
-        std::cout << std::flush << "\r" << time << std::flush;
+        std::cout << "\r" << time << ": collected " << sample_count << " samples" << std::flush;
 
         // fill tx statistics vector
         txfile.seekg(0);
@@ -139,7 +142,8 @@ int main(int argc, char* argv[]) {
         last_tx_bytes = tx_bytes;
         tx_series.push_back(txdatapoint);
 
-        sleep(.1);
+        //sleep(1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
 //        std::cout << "waiting\n";
         scanfile.clear();
         //running = false;
