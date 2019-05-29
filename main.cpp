@@ -97,9 +97,9 @@ int main(int argc, char* argv[]) {
     //remove characters until valid header is found
     if(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K) {
         std::cerr << "Invalid header, discarding until valid\n";
-    }
-    while(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K) {
-        scanfile.ignore(1);
+        while(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K) {
+            scanfile.ignore(1);
+        }
     }
 
     std::vector<Sample*> received_series;
@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
         last_tx_bytes = tx_bytes;
         tx_series.push_back(txdatapoint);
 
-        sleep(1);
+        sleep(.1);
         std::cout << "waiting\n";
         scanfile.clear();
         //running = false;
