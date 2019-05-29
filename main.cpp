@@ -118,9 +118,9 @@ int main(int argc, char* argv[]) {
         // read available samples
         scanfile.peek();
         while(!scanfile.eof()) {
-            auto sample = readSample(scanfile, received_series);
+            auto readsample = readSample(scanfile, received_series);
             sample_count++;
-            delete sample; // looks like we don't actually need it here
+            delete readsample; // looks like we don't actually need it here
         }
 
         // get current time
@@ -131,6 +131,7 @@ int main(int argc, char* argv[]) {
         std::string time = std::ctime(&in_time_t);
         rtrim(time);
         std::cout << "\r" << time << ": collected " << sample_count << " samples" << std::flush;
+        //TODO running average of rssi
 
         // fill tx statistics vector
         txfile.seekg(0);
