@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
     std::vector<TxDataPoint> tx_series;
     long last_tx_bytes;
     int sample_count = 0;
-    float avg_rssi;
+    float avg_rssi = 0;
 
     while (running) {
         // read available samples
@@ -123,18 +123,20 @@ int main(int argc, char* argv[]) {
             auto readsample = readSample(scanfile, received_series);
             sample_count++;
             delete readsample; // looks like we don't actually need it here
+        }
 
-            //TODO running average of rssi
-            if(sample_count > 1) {
-                auto previous = received_series[received_series.size()-2];
-                auto current = received_series[received_series.size()-1];
-                auto delta_t = current->timestamp - previous->timestamp;
-                std::chrono::milliseconds tau(1000);
-                auto alpha = delta_t / tau;
-                std::cout << alpha << std::endl;
-                avg_rssi += alpha * (current->rssi - avg_rssi);
-                //avg_rssi = current->rssi;
-            }
+        //TODO running average of rssi
+        if(sample_count > 1) {
+            auto previous = received_series[received_series.size()-2];
+            auto current = received_series[received_series.size()-1];
+            auto delta_t = current->timestamp - previous->timestamp;
+            std::chrono::milliseconds tau(1000);
+            //double alpha = delta_t / tau;
+            double alpha = 0.1;
+            //std::cout << alpha << std::endl;
+            //avg_rssi += alpha * (current->rssi - avg_rssi);
+            avg_rssi = (1-alpha)*avg_rssi + alpha*current->rssi;
+            //avg_rssi = current->rssi;
         }
 
         // get current time
