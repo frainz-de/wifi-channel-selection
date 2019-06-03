@@ -68,9 +68,10 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample*> &rec
     return sample;
 }
 
-void signalHandler(int signal) {
-    if(signal == SIGINT) {
+void signalHandler(int sig) {
+    if(sig == SIGINT) {
         running = false;
+        signal(SIGINT, SIG_DFL);
     }
 }
 
@@ -132,6 +133,7 @@ int main(int argc, char* argv[]) {
                 auto alpha = delta_t / tau;
                 std::cout << alpha << std::endl;
                 avg_rssi += alpha * (current->rssi - avg_rssi);
+                //avg_rssi = current->rssi;
             }
         }
 
@@ -161,7 +163,8 @@ int main(int argc, char* argv[]) {
         //running = false;
     }
 
-    std::cout << "caught signal\n";
+    std::cout << "\ncaught signal\n";
+
     // output scan data
     std::ofstream outputscanfile("specdata.csv");
     for (auto const& sample: received_series) {
