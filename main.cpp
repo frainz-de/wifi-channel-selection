@@ -113,6 +113,7 @@ int main(int argc, char* argv[]) {
     std::vector<TxDataPoint> tx_series;
     long last_tx_bytes;
     int sample_count = 0;
+    float avg_rssi;
 
     while (running) {
         // read available samples
@@ -121,6 +122,17 @@ int main(int argc, char* argv[]) {
             auto readsample = readSample(scanfile, received_series);
             sample_count++;
             delete readsample; // looks like we don't actually need it here
+
+            //TODO running average of rssi
+            if(sample_count > 1) {
+                auto previous = received_series[received_series.size()-2];
+                auto current = received_series[received_series.size()-1];
+                auto delta_t = current->timestamp - previous->timestamp;
+                std::chrono::milliseconds tau(1000);
+                auto alpha = delta_t / tau;
+                std::cout << alpha << std::endl;
+                avg_rssi += alpha * (current->rssi - avg_rssi);
+            }
         }
 
         // get current time
@@ -130,14 +142,13 @@ int main(int argc, char* argv[]) {
         //std::cout << std::flush << "\r" << std::ctime(&in_time_t) << "\r" << std::flush;
         std::string time = std::ctime(&in_time_t);
         rtrim(time);
-        std::cout << "\r" << time << ": collected " << sample_count << " samples" << std::flush;
-        //TODO running average of rssi
+        std::cout << "\r" << time << ": collected " << sample_count << " samples, rssi: " << avg_rssi << std::flush;
 
         // fill tx statistics vector
-        txfile.seekg(0);
+        txfile.seekg(0); // seek to the beginning to get a new value
         std::string tx_bytes_string;
         std::getline(txfile, tx_bytes_string);
-        long tx_bytes = std::stol(tx_bytes_string);
+        long tx_bytes = std::stol(tx_bytes_string); // convert string to long
         TxDataPoint txdatapoint(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()),
                 tx_bytes-last_tx_bytes);
         last_tx_bytes = tx_bytes;
