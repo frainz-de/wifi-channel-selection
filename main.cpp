@@ -10,7 +10,10 @@ extern "C" {
 #include <iomanip>
 #include <thread>
 #include <signal.h>
-#include <Eigen/Dense>
+#include <filesystem>
+#include <algorithm>
+#include "dirent.h"
+//#include <Eigen/Dense>
 #include "sample.h"
 
 using DataPoint = std::tuple<int, double>;
@@ -76,13 +79,30 @@ void signalHandler(int sig) {
 }
 
 int main(int argc, char* argv[]) {
-    std::string scanpath = "/sys/kernel/debug/ieee80211/phy1/ath10k/spectral_scan0";
-    std::string txpath = "/sys/class/net/wlp5s0/statistics/tx_bytes";
+    std::string interface = "wlp5s0";
+    std::string device;// = "phy1";
+    std::string txpath;
+    std::string scanpath;
 
     // hacky argument handling
     if(argc > 1) {
-        scanpath = argv[1];
+        interface = argv[1];
+
+    } else {
+      //  std::filesystem::path path = "/sys/class/net/" + interface + "/device/ieee80211/";
+      //  std::filesystem::directory_iterator dir(path);
+      //  std::cout << dir->path().filename << std::endl;
     }
+
+    auto dir = opendir(("/sys/class/net/" + interface + "/device/ieee80211/").c_str()); 
+    readdir(dir);
+    readdir(dir);
+    auto ent = readdir(dir);
+    closedir(dir);
+    device = ent->d_name;
+    txpath = "/sys/class/net/" + interface + "/statistics/tx_bytes";
+    scanpath = "/sys/kernel/debug/ieee80211/" + device + "/ath10k/spectral_scan0";
+
 
     signal(SIGINT, signalHandler);
 
