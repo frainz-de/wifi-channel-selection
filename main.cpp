@@ -88,21 +88,22 @@ int main(int argc, char* argv[]) {
     if(argc > 1) {
         interface = argv[1];
 
-    } else {
-      //  std::filesystem::path path = "/sys/class/net/" + interface + "/device/ieee80211/";
-      //  std::filesystem::directory_iterator dir(path);
-      //  std::cout << dir->path().filename << std::endl;
     }
 
-    auto dir = opendir(("/sys/class/net/" + interface + "/device/ieee80211/").c_str()); 
-    readdir(dir);
-    readdir(dir);
-    auto ent = readdir(dir);
-    closedir(dir);
-    device = ent->d_name;
-    txpath = "/sys/class/net/" + interface + "/statistics/tx_bytes";
-    scanpath = "/sys/kernel/debug/ieee80211/" + device + "/ath10k/spectral_scan0";
-
+    { // clean up the c junk after deducing the interface
+        auto dir = opendir(("/sys/class/net/" + interface + "/device/ieee80211/").c_str()); 
+        if (!dir) {
+            std::cerr << "Error deducing interface: " << strerror(errno) << std::endl;
+            return 1;
+        }
+        readdir(dir);
+        readdir(dir);
+        auto ent = readdir(dir);
+        closedir(dir);
+        device = ent->d_name;
+        txpath = "/sys/class/net/" + interface + "/statistics/tx_bytes";
+        scanpath = "/sys/kernel/debug/ieee80211/" + device + "/ath10k/spectral_scan0";
+    }
 
     signal(SIGINT, signalHandler);
 
