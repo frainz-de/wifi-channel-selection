@@ -83,11 +83,15 @@ int main(int argc, char* argv[]) {
     std::string device;// = "phy1";
     std::string txpath;
     std::string scanpath;
+    int channel = 0;
 
     // hacky argument handling
     if(argc > 1) {
         interface = argv[1];
+    }
 
+    if(argc > 2) {
+        channel = std::stoi(argv[2]);
     }
 
     { // clean up the c junk after deducing the interface
@@ -103,6 +107,11 @@ int main(int argc, char* argv[]) {
         device = ent->d_name;
         txpath = "/sys/class/net/" + interface + "/statistics/tx_bytes";
         scanpath = "/sys/kernel/debug/ieee80211/" + device + "/ath10k/spectral_scan0";
+    }
+
+    if(channel) {
+        std::string mode = channel < 5000 ? "HT20" : "80MHz";
+        std::system(("/usr/bin/iw dev " + device + " set freq " + std::to_string(channel) + " " + mode).c_str());
     }
 
     signal(SIGINT, signalHandler);
