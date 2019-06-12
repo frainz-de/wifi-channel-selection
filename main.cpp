@@ -80,7 +80,7 @@ void signalHandler(int sig) {
 
 int main(int argc, char* argv[]) {
     std::string interface = "wlp5s0";
-    std::string device;// = "phy1";
+    std::string phy;// = "phy1";
     std::string txpath;
     std::string scanpath;
     int channel = 0;
@@ -104,14 +104,14 @@ int main(int argc, char* argv[]) {
         readdir(dir);
         auto ent = readdir(dir);
         closedir(dir);
-        device = ent->d_name;
+        phy = ent->d_name;
         txpath = "/sys/class/net/" + interface + "/statistics/tx_bytes";
-        scanpath = "/sys/kernel/debug/ieee80211/" + device + "/ath10k/spectral_scan0";
+        scanpath = "/sys/kernel/debug/ieee80211/" + phy + "/ath10k/spectral_scan0";
     }
 
     if(channel) {
         std::string mode = channel < 5000 ? "HT20" : "80MHz";
-        std::system(("/usr/bin/iw dev " + device + " set freq " + std::to_string(channel) + " " + mode).c_str());
+        std::system(("/usr/bin/iw dev " + interface + " set freq " + std::to_string(channel) + " " + mode).c_str());
     }
 
     signal(SIGINT, signalHandler);
