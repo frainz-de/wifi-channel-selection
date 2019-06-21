@@ -12,13 +12,14 @@ extern "C" {
 #include <signal.h>
 #include <filesystem>
 #include <algorithm>
-#include "dirent.h"
+#include <dirent.h>
 //#include <Eigen/Dense>
 #include "sample.h"
 
 using DataPoint = std::tuple<int, double>;
 using TxDataPoint = std::tuple<std::chrono::milliseconds, long>;
 
+// global variable to exit main loop gracefully
 bool running = true;
 
 static inline void rtrim(std::string &s) {
@@ -27,6 +28,22 @@ static inline void rtrim(std::string &s) {
     }).base(), s.end());
 }
 
+
+// execute system command and return stdout as string
+std::string exec(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
+// read a sample from proc, convert it to an object and store it in a vector
 fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series) {
 
     scanfile.peek(); // check for EOF
@@ -71,6 +88,7 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample*> &rec
     return sample;
 }
 
+// catch SIGINT to terminate gracefully
 void signalHandler(int sig) {
     if(sig == SIGINT) {
         running = false;
