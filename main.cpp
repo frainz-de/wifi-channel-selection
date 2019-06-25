@@ -20,7 +20,7 @@ using DataPoint = std::tuple<int, double>;
 using TxDataPoint = std::tuple<std::chrono::milliseconds, long>;
 
 // global variable to exit main loop gracefully
-bool running = true;
+volatile bool running = true;
 
 static inline void rtrim(std::string &s) {
     s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
@@ -30,10 +30,10 @@ static inline void rtrim(std::string &s) {
 
 
 // execute system command and return stdout as string
-std::string exec(const char* cmd) {
+std::string exec(const std::string cmd) {
     std::array<char, 128> buffer;
     std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
     if (!pipe) {
         throw std::runtime_error("popen() failed!");
     }
@@ -96,6 +96,28 @@ void signalHandler(int sig) {
     }
 }
 
+void manage_neighbors(const std::string &interface) {
+    signal(SIGINT, signalHandler);
+    std::string neighbors;
+    neighbors = exec("for i in $(iw dev " + interface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
+
+    // get neighbors regularly, not working yet
+    /*
+    std::chrono::time_point<std::chrono::system_clock> lastrun = 
+        std::chrono::system_clock::now() - std::chrono::seconds(60);;
+    while (running) {
+        if ((lastrun - std::chrono::system_clock::now()) > std::chrono::seconds(60)) {
+            neighbors = exec("for i in $(iw dev " + interface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
+        std::cout << std::endl << neighbors << std::endl;
+        lastrun = std::chrono::system_clock::now();
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    }
+    */
+}
+
 int main(int argc, char* argv[]) {
     std::string interface = "wlp5s0";
     std::string phy;// = "phy1";
@@ -133,6 +155,8 @@ int main(int argc, char* argv[]) {
     }
 
     signal(SIGINT, signalHandler);
+
+    std::thread neighbor_thread(manage_neighbors, interface);
 
     // try to open (virtual) file in binary mode
     std::ifstream scanfile;
@@ -213,7 +237,7 @@ int main(int argc, char* argv[]) {
         //running = false;
     }
 
-    std::cout << "\ncaught signal\n";
+    std::cout << "\ncaught SIGINT, exiting\n";
 
     // output scan data
     std::ofstream outputscanfile("specdata.csv");
@@ -227,6 +251,8 @@ int main(int argc, char* argv[]) {
     for (auto const& datapoint: tx_series) {
         outputtxfile << std::get<0>(datapoint).count() << ";" << std::get<1>(datapoint) << ";\n";
     }
+
+    neighbor_thread.join();
 
     // scanfile.close(); // the destructor does this for us
     

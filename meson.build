@@ -3,4 +3,5 @@ project('collector', 'cpp',
 add_project_link_arguments(['-lstdc++fs'], language : 'cpp')
 src = ['main.cpp','sample.cpp']
 eigen_dep = dependency('eigen3')
-executable('collector', sources : src, dependencies : eigen_dep)
+thread_dep = dependency('threads')
+executable('collector', sources : src, dependencies : [thread_dep, eigen_dep])
