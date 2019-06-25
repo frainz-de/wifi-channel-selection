@@ -96,10 +96,14 @@ void signalHandler(int sig) {
     }
 }
 
-void manage_neighbors(const std::string &interface) {
+void manage_neighbors(const std::string& interface) {
     signal(SIGINT, signalHandler);
+    std::cout << "\n starting scan\n";
     std::string neighbors;
     neighbors = exec("for i in $(iw dev " + interface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
+    std::cout << std::endl << neighbors << std::endl;
+
+    std::cout << "\n scan finished\n" << std::flush;
 
     // get neighbors regularly, not working yet
     /*
@@ -199,8 +203,8 @@ int main(int argc, char* argv[]) {
 
         //TODO running average of rssi
         if(sample_count > 1) {
-            auto previous = received_series[received_series.size()-2];
-            auto current = received_series[received_series.size()-1];
+            auto previous = received_series.at(received_series.size()-2);
+            auto current = received_series.at(received_series.size()-1);
             auto delta_t = current->timestamp - previous->timestamp;
             std::chrono::milliseconds tau(1000);
             //double alpha = delta_t / tau;
@@ -218,7 +222,8 @@ int main(int argc, char* argv[]) {
         //std::cout << std::flush << "\r" << std::ctime(&in_time_t) << "\r" << std::flush;
         std::string time = std::ctime(&in_time_t);
         rtrim(time);
-        std::cout << "\r" << time << ": collected " << sample_count << " samples, rssi: " << avg_rssi << std::flush;
+        std::cout << "\r" << time << ": collected " << sample_count
+            << " samples, rssi: " << avg_rssi << "    " << std::flush;
 
         // fill tx statistics vector
         txfile.seekg(0); // seek to the beginning to get a new value
