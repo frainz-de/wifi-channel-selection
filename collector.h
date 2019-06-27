@@ -6,6 +6,7 @@
 #include "sample.h"
 #include <chrono>
 #include <tuple>
+#include <thread>
 
 using DataPoint = std::tuple<int, double>;
 using TxDataPoint = std::tuple<std::chrono::milliseconds, long>;
@@ -13,8 +14,9 @@ using TxDataPoint = std::tuple<std::chrono::milliseconds, long>;
 class Collector {
 public:
     Collector(std::string& interface);
-    void run(bool& running);
+    void run(volatile bool* running);
 
+    std::thread start_thread(volatile bool* running);
     fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series);
 private:
 

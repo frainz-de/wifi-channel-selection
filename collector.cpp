@@ -10,6 +10,7 @@ extern "C" {
 #include <cstring>
 #include <thread>
 #include <algorithm>
+#include <cassert>
 
 Collector::Collector(std::string& interface) {
     
@@ -36,19 +37,16 @@ Collector::Collector(std::string& interface) {
         std::cerr << "Failed to open scan file: " << strerror(errno) << std::endl;
         throw std::runtime_error("");
     }
-
-    // try to open network statistics file
-    std::ifstream txfile;
-    txfile.open(txpath, std::fstream::in);
-    if(txfile.fail()) {
-        std::cerr << "Failed to open network statistics file: " << strerror(errno) << std::endl;
-        throw std::runtime_error("");
-    }
 }
 
-void Collector::run(bool& running) {
-    
-    //remove characters until valid header is found
+std::thread Collector::start_thread(volatile bool* running) {
+    std::thread collector_thread(&Collector::run, this, running);
+    return collector_thread;
+}
+
+void Collector::run(volatile bool* running) {
+
+        //remove characters until valid header is found
     if(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K) {
         std::cerr << "Invalid header, discarding until valid\n";
         while(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K) {
@@ -57,7 +55,7 @@ void Collector::run(bool& running) {
     }
 
 
-    while (running) {
+    while (*running) {
         // read available samples
         scanfile.peek();
         while(!scanfile.eof()) {
@@ -89,22 +87,54 @@ void Collector::run(bool& running) {
         rtrim(time);
         std::cout << "\r" << time << ": collected " << sample_count
             << " samples, rssi: " << avg_rssi << "    " << std::flush;
-
+        
+        // try to open network statistics file
+        std::ifstream txfile;
+        txfile.open(txpath, std::fstream::in);
+        if(txfile.fail()) {
+            std::cerr << "Failed to open network statistics file: " << strerror(errno) << std::endl;
+            throw std::runtime_error("");
+        }
+        
+        /*
         // fill tx statistics vector
+        // txfile.seekg(0, std::ios_base::beg); // seek to the beginning to get a new value
         txfile.seekg(0); // seek to the beginning to get a new value
-        std::string tx_bytes_string;
-        std::getline(txfile, tx_bytes_string);
-        long tx_bytes = std::stol(tx_bytes_string); // convert string to long
+        if(txfile.fail()) {
+            std::cerr << "\nFailed reading network statistics: " << strerror(errno) << std::endl;
+        }
+        */
+        //std::string tx_bytes_string;
+        //std::getline(txfile, tx_bytes_string);
+        //txfile >> tx_bytes_string;
+        //std::getline(txfile, tx_bytes_string);
+        //long tx_bytes = std::stol(tx_bytes_string); // convert string to long
+        long tx_bytes;
+        txfile >> tx_bytes;
         TxDataPoint txdatapoint(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()),
                 tx_bytes-last_tx_bytes);
         last_tx_bytes = tx_bytes;
         tx_series.push_back(txdatapoint);
 
-        //sleep(1);
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 //        std::cout << "waiting\n";
         scanfile.clear();
         //running = false;
+    }
+
+    std::cout << "\ncaught SIGINT, exiting\n";
+
+    // output scan data
+    std::ofstream outputscanfile("specdata.csv");
+    for (auto const& sample: received_series) {
+        sample->output(outputscanfile);
+    }
+    outputscanfile.close();
+
+    // output tx data
+    std::ofstream outputtxfile("txdata.csv");
+    for (auto const& datapoint: tx_series) {
+        outputtxfile << std::get<0>(datapoint).count() << ";" << std::get<1>(datapoint) << ";\n";
     }
 }
 

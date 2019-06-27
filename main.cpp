@@ -15,6 +15,7 @@ extern "C" {
 #include <dirent.h>
 //#include <Eigen/Dense>
 #include "sample.h"
+#include "collector.h"
 
 using DataPoint = std::tuple<int, double>;
 using TxDataPoint = std::tuple<std::chrono::milliseconds, long>;
@@ -137,7 +138,7 @@ int main(int argc, char* argv[]) {
     if(argc > 2) {
         channel = std::stoi(argv[2]);
     }
-
+/*
     { // clean up the c junk after deducing the interface
         auto dir = opendir(("/sys/class/net/" + interface + "/device/ieee80211/").c_str()); 
         if (!dir) {
@@ -152,15 +153,15 @@ int main(int argc, char* argv[]) {
         txpath = "/sys/class/net/" + interface + "/statistics/tx_bytes";
         scanpath = "/sys/kernel/debug/ieee80211/" + phy + "/ath10k/spectral_scan0";
     }
-
+*/
     if(channel) {
         std::string mode = channel < 5000 ? "HT20" : "80MHz";
         std::system(("/usr/bin/iw dev " + interface + " set freq " + std::to_string(channel) + " " + mode).c_str());
     }
 
+/*
     signal(SIGINT, signalHandler);
-
-    std::thread neighbor_thread(manage_neighbors, interface);
+    //std::thread collector_thread(&Collector::run, &collector, &running);
 
     // try to open (virtual) file in binary mode
     std::ifstream scanfile;
@@ -177,7 +178,6 @@ int main(int argc, char* argv[]) {
         std::cerr << "Failed to open network statistics file: " << strerror(errno) << std::endl;
         return 1;
     }
-
     //remove characters until valid header is found
     if(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K) {
         std::cerr << "Invalid header, discarding until valid\n";
@@ -241,7 +241,9 @@ int main(int argc, char* argv[]) {
         scanfile.clear();
         //running = false;
     }
+*/
 
+/*
     std::cout << "\ncaught SIGINT, exiting\n";
 
     // output scan data
@@ -256,10 +258,16 @@ int main(int argc, char* argv[]) {
     for (auto const& datapoint: tx_series) {
         outputtxfile << std::get<0>(datapoint).count() << ";" << std::get<1>(datapoint) << ";\n";
     }
+*/
 
+    std::thread neighbor_thread(manage_neighbors, interface);
+    
+    Collector collector(interface);
+    std::thread collector_thread = collector.start_thread(&running);
+    
     neighbor_thread.join();
+    collector_thread.join();
 
     // scanfile.close(); // the destructor does this for us
-    
     return 0;
 }
