@@ -13,6 +13,8 @@ extern "C" {
 #include <filesystem>
 #include <algorithm>
 #include <dirent.h>
+#include <list>
+#include <nlohmann/json.hpp>
 //#include <Eigen/Dense>
 #include "sample.h"
 #include "collector.h"
@@ -105,6 +107,26 @@ void manage_neighbors(const std::string& interface) {
     std::cout << std::endl << neighbors << std::endl;
 
     std::cout << "\n scan finished\n" << std::flush;
+
+    std::list<std::string> neighbor_list;
+    {
+        char* pch;
+        char* neighbors_cstr = new char[neighbors.length() + 1];
+        strcpy(neighbors_cstr, neighbors.c_str());
+        pch = strtok(neighbors_cstr, "\n");
+        while(pch) {
+            neighbor_list.push_back(std::string(pch));
+            pch = strtok(NULL, "\n");
+        }
+
+        delete[] neighbors_cstr;
+    }
+
+    nlohmann::json neighbor_msg;
+    nlohmann::json neighbor_json(neighbor_list);
+    neighbor_msg["neighbors"] = neighbor_json;
+
+    std::string neighbor_msg_dump = neighbor_msg.dump();
 
     // get neighbors regularly, not working yet
     /*
