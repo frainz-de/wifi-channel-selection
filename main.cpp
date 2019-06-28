@@ -51,53 +51,6 @@ std::string exec(const std::string cmd) {
     return result;
 }
 
-/*
-// read a sample from proc, convert it to an object and store it in a vector
-fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series) {
-
-    scanfile.peek(); // check for EOF
-    if(scanfile.eof()) {
-        throw std::runtime_error("EOF reached");
-    }
-
-    auto sample = new fft_sample_ath10k;
-    scanfile.read((char*)&sample->tlv, sizeof(fft_sample_tlv)); //read TLV header
-//    std::cout << "type: " << unsigned(sample->tlv.type) << std::endl;
-//    std::cout << "length: " << be16toh(sample->tlv.length) << std::endl;
-    if(sample->tlv.type != ATH_FFT_SAMPLE_ATH10K) {
-        throw std::runtime_error("Wrong sample type, only ath10k samples are supportet atm\n");
-    }
-
-    // read rest of header
-    scanfile.read((char*)sample + sizeof(fft_sample_tlv), sizeof(fft_sample_ath10k) - sizeof(fft_sample_tlv));
-
-    // create buffer and read in the FFT bins
-    auto datalength = be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv);
-    auto readSample = new Sample(datalength);
-
-//    auto data = new uint8_t[datalength];
-    scanfile.read((char*) readSample->data, datalength);
-
-    // calculate signal strength
-    int squaresum = 0;
-    for (decltype(datalength) i = 0; i < datalength; i++) {
-        int value = readSample->data[i] << sample->max_exp;
-        squaresum += (value*value);
-    }
-    //float power = sample->noise + sample->rssi + 20 *
-
-    // fill Sample object
-    readSample->rssi = sample->rssi;
-    readSample->noise = be16toh(sample->noise);
-    readSample->center_freq = be16toh(sample->freq1);
-
-    received_series.push_back(readSample);
-
-    scanfile.peek(); //set EOF bit if no data available
-    return sample;
-}
-*/
-
 // catch SIGINT to terminate gracefully
 void signalHandler(int sig) {
     if(sig == SIGINT) {
