@@ -15,6 +15,11 @@ extern "C" {
 #include <dirent.h>
 #include <list>
 #include <nlohmann/json.hpp>
+//sockets:
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 //#include <Eigen/Dense>
 #include "sample.h"
 #include "collector.h"
@@ -46,6 +51,7 @@ std::string exec(const std::string cmd) {
     return result;
 }
 
+/*
 // read a sample from proc, convert it to an object and store it in a vector
 fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series) {
 
@@ -90,6 +96,7 @@ fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample*> &rec
     scanfile.peek(); //set EOF bit if no data available
     return sample;
 }
+*/
 
 // catch SIGINT to terminate gracefully
 void signalHandler(int sig) {
@@ -143,6 +150,20 @@ void manage_neighbors(const std::string& interface) {
 
     }
     */
+
+    for(auto i = neighbor_list.begin(); i != neighbor_list.end(); i++) {
+       int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+       struct sockaddr_in6 neighbor_addr = {};
+       neighbor_addr.sin6_family = AF_INET6;
+       neighbor_addr.sin6_port = htons (8901);
+       //neighbor_addr.sin6_addr.s6_addr= u6_addr8(i->c_str());
+       inet_pton(AF_INET6, "i->c_str()", &(neighbor_addr.sin6_addr));
+
+       //TODO: send json, not addr
+       sendto(sockfd, i->c_str(), i->length(), 0, (struct sockaddr*)&neighbor_addr, sizeof(neighbor_addr));
+
+    }
+
 }
 
 int main(int argc, char* argv[]) {
