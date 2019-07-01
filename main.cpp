@@ -110,7 +110,10 @@ void manage_neighbors(const std::string& interface) {
        neighbor_addr.sin6_family = AF_INET6;
        neighbor_addr.sin6_port = htons (8901);
        //neighbor_addr.sin6_addr.s6_addr= u6_addr8(i->c_str());
-       inet_pton(AF_INET6, "i->c_str()", &(neighbor_addr.sin6_addr));
+       int e = inet_pton(AF_INET6, i->c_str(), &(neighbor_addr.sin6_addr));
+       if (e <= 0) {
+          throw std::runtime_error("address parsing failed");
+       }
 
        //TODO: send json, not addr
        sendto(sockfd, i->c_str(), i->length(), 0, (struct sockaddr*)&neighbor_addr, sizeof(neighbor_addr));
