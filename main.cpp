@@ -71,6 +71,7 @@ void manage_neighbors(const std::string& interface) {
 
     std::cout << "\n scan finished\n" << std::flush;
 
+    // parse string with neighbor addresses into list
     std::list<std::string> neighbor_list;
     {
         char* pch;
@@ -120,10 +121,31 @@ void manage_neighbors(const std::string& interface) {
           throw std::runtime_error("address parsing failed");
        }
 
-       //TODO: filter own address
        sendto(sockfd, neighbor_msg_dump.c_str(), neighbor_msg_dump.length(), 0, (struct sockaddr*)&neighbor_addr, sizeof(neighbor_addr));
        std::cout << *i << std::endl;
 
+    }
+
+    // logic to receive neighbors of neighbors --> start at the beginning of thread
+    // maybe use std::future for scanning
+    int sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
+    char buffer[1500] = {};
+
+    struct sockaddr_in6 neighbor_addr = {};
+    neighbor_addr.sin6_family = AF_INET6;
+    neighbor_addr.sin6_port = htons(8901);
+    neighbor_addr.sin6_addr = in6addr_any;
+    bind(sockfd, (const struct sockaddr *) &neighbor_addr, sizeof(neighbor_addr));
+
+    recvfrom(sockfd, (char *)buffer, sizeof(buffer), MSG_WAITALL, 0, 0);
+    std::string msg(buffer);
+    std::cout << std::endl << msg;
+
+    nlohmann::json received_neighbors_json = nlohmann::json::parse(msg);
+    auto received_neighbors = received_neighbors_json["neighbors"];
+
+    for(auto i = received_neighbors.begin(); i!=received_neighbors.end(); i++) {
+        std::cout << *i << std::endl;
     }
 
 }
