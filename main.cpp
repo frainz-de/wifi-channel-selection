@@ -105,7 +105,7 @@ void manage_neighbors(const std::string& interface) {
     */
 
     for(auto i = neighbor_list.begin(); i != neighbor_list.end(); i++) {
-       int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+       int sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
        struct sockaddr_in6 neighbor_addr = {};
        neighbor_addr.sin6_family = AF_INET6;
        neighbor_addr.sin6_port = htons (8901);
@@ -115,8 +115,9 @@ void manage_neighbors(const std::string& interface) {
           throw std::runtime_error("address parsing failed");
        }
 
-       //TODO: send json, not addr
-       sendto(sockfd, i->c_str(), i->length(), 0, (struct sockaddr*)&neighbor_addr, sizeof(neighbor_addr));
+       //TODO: filter own address
+       sendto(sockfd, neighbor_msg_dump.c_str(), neighbor_msg_dump.length(), 0, (struct sockaddr*)&neighbor_addr, sizeof(neighbor_addr));
+       std::cout << *i << std::endl;
 
     }
 
