@@ -60,7 +60,10 @@ void signalHandler(int sig) {
 }
 
 void manage_neighbors(const std::string& interface) {
-    signal(SIGINT, signalHandler);
+    //TODO get this from a config file
+    std::string prefix("fd00::1"); // prefix to filter for addresses
+    std::string own_address = exec("ip a | grep -o '" + prefix + ".*/' | tr -d '/' | tr -d '\n'");
+
     std::cout << "\n starting scan\n";
     std::string neighbors;
     neighbors = exec("for i in $(iw dev " + interface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
@@ -81,6 +84,8 @@ void manage_neighbors(const std::string& interface) {
 
         delete[] neighbors_cstr;
     }
+
+    neighbor_list.remove(own_address); // we don't want to send our own address to our neighbors
 
     nlohmann::json neighbor_msg;
     nlohmann::json neighbor_json(neighbor_list);
@@ -143,6 +148,8 @@ int main(int argc, char* argv[]) {
         std::string mode = channel < 5000 ? "HT20" : "80MHz";
         std::system(("/usr/bin/iw dev " + interface + " set freq " + std::to_string(channel) + " " + mode).c_str());
     }
+
+    signal(SIGINT, signalHandler);
 
     std::thread neighbor_thread(manage_neighbors, interface);
     
