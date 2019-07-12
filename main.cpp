@@ -14,6 +14,7 @@ extern "C" {
 #include <algorithm>
 #include <dirent.h>
 #include <list>
+#include <set>
 #include <nlohmann/json.hpp>
 //sockets:
 #include <sys/socket.h>
@@ -72,21 +73,21 @@ void manage_neighbors(const std::string& interface) {
     std::cout << "\n scan finished\n" << std::flush;
 
     // parse string with neighbor addresses into list
-    std::list<std::string> neighbor_list;
+    std::set<std::string> neighbor_list;
     {
         char* pch;
         char* neighbors_cstr = new char[neighbors.length() + 1];
         strcpy(neighbors_cstr, neighbors.c_str());
         pch = strtok(neighbors_cstr, "\n");
         while(pch) {
-            neighbor_list.push_back(std::string(pch));
+            neighbor_list.insert(std::string(pch));
             pch = strtok(NULL, "\n");
         }
 
         delete[] neighbors_cstr;
     }
 
-    neighbor_list.remove(own_address); // we don't want to send our own address to our neighbors
+    neighbor_list.erase(own_address); // we don't want to send our own address to our neighbors
 
     nlohmann::json neighbor_msg;
     nlohmann::json neighbor_json(neighbor_list);
