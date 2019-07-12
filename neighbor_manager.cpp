@@ -53,10 +53,9 @@ void NeighborManager::scan() {
 
 void NeighborManager::run(volatile bool* running) {
     scan();
-    auto neighbor_list = neighbors;
 
     nlohmann::json neighbor_msg;
-    nlohmann::json neighbor_json(neighbor_list);
+    nlohmann::json neighbor_json(neighbors);
     neighbor_msg["neighbors"] = neighbor_json;
 
     std::string neighbor_msg_dump = neighbor_msg.dump();
@@ -77,7 +76,7 @@ void NeighborManager::run(volatile bool* running) {
     }
     */
 
-    for(auto i = neighbor_list.begin(); i != neighbor_list.end(); i++) {
+    for(auto i = neighbors.begin(); i != neighbors.end(); i++) {
        int sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
        struct sockaddr_in6 neighbor_addr = {};
        neighbor_addr.sin6_family = AF_INET6;
