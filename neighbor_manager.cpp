@@ -10,7 +10,11 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-NeighborManager::NeighborManager(const std::string& interface) : interface(interface) {}
+NeighborManager::NeighborManager(const std::string& interface) : interface(interface) {
+    //TODO get this from a config file
+    std::string prefix("fd00::1"); // prefix to filter for addresses
+    own_address = exec("ip a | grep -o '" + prefix + ".*/' | tr -d '/' | tr -d '\n'");
+}
 
 
 std::thread NeighborManager::start_thread(volatile bool* running) {
@@ -18,16 +22,11 @@ std::thread NeighborManager::start_thread(volatile bool* running) {
     return thread;
 }
 
-void NeighborManager::run(volatile bool* running) {
-
-    //TODO get this from a config file
-    std::string prefix("fd00::1"); // prefix to filter for addresses
-    std::string own_address = exec("ip a | grep -o '" + prefix + ".*/' | tr -d '/' | tr -d '\n'");
-
+void NeighborManager::scan() {
     std::cout << "\n starting scan\n";
-    std::string neighbors;
-    neighbors = exec("for i in $(iw dev " + interface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
-    std::cout << std::endl << neighbors << std::endl;
+    std::string neighbor_string;
+    neighbor_string = exec("for i in $(iw dev " + interface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
+    std::cout << std::endl << neighbor_string << std::endl;
 
     std::cout << "\n scan finished\n" << std::flush;
 
@@ -35,18 +34,26 @@ void NeighborManager::run(volatile bool* running) {
     std::set<std::string> neighbor_list;
     {
         char* pch;
-        char* neighbors_cstr = new char[neighbors.length() + 1];
-        strcpy(neighbors_cstr, neighbors.c_str());
+        char* neighbors_cstr = new char[neighbor_string.length() + 1];
+        strcpy(neighbors_cstr, neighbor_string.c_str());
         pch = strtok(neighbors_cstr, "\n");
         while(pch) {
-            neighbor_list.insert(std::string(pch));
+            std::string neighbor(pch);
+            if (neighbor != own_address) {
+                neighbor_list.insert(neighbor);
+            }
             pch = strtok(NULL, "\n");
         }
 
         delete[] neighbors_cstr;
     }
+    neighbors = neighbor_list;
 
-    neighbor_list.erase(own_address); // we don't want to send our own address to our neighbors
+}
+
+void NeighborManager::run(volatile bool* running) {
+    scan();
+    auto neighbor_list = neighbors;
 
     nlohmann::json neighbor_msg;
     nlohmann::json neighbor_json(neighbor_list);

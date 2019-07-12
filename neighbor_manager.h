@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <string>
+#include <set>
 
 class NeighborManager {
 public:
@@ -10,5 +11,10 @@ public:
     std::thread start_thread(volatile bool* running);
     
 private:
+    void scan();
+
     std::string interface; 
+    std::string own_address;
+    std::set<std::string> neighbors;
+    std::set<std::string> neighbors_neighbors;
 };
