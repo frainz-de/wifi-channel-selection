@@ -156,7 +156,9 @@ int main(int argc, char* argv[]) {
 
     signal(SIGINT, signalHandler);
 
-    std::thread neighbor_thread(manage_neighbors, interface);
+    //std::thread neighbor_thread(manage_neighbors, interface);
+    NeighborManager neighbor_manager(interface);
+    std::thread neighbor_thread = neighbor_manager.start_thread(&running);
     
     Collector collector(interface);
     std::thread collector_thread = collector.start_thread(&running);
