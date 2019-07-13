@@ -12,6 +12,7 @@ public:
     
 private:
     void scan();
+    void send_neighbors();
 
     std::string interface; 
     std::string own_address;

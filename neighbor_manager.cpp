@@ -51,30 +51,13 @@ void NeighborManager::scan() {
 
 }
 
-void NeighborManager::run(volatile bool* running) {
-    scan();
-
+void NeighborManager::send_neighbors() {
     nlohmann::json neighbor_msg;
     nlohmann::json neighbor_json(neighbors);
     neighbor_msg["neighbors"] = neighbor_json;
 
     std::string neighbor_msg_dump = neighbor_msg.dump();
 
-    // get neighbors regularly, not working yet
-    /*
-    std::chrono::time_point<std::chrono::system_clock> lastrun = 
-        std::chrono::system_clock::now() - std::chrono::seconds(60);;
-    while (running) {
-        if ((lastrun - std::chrono::system_clock::now()) > std::chrono::seconds(60)) {
-            neighbors = exec("for i in $(iw dev " + interface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
-        std::cout << std::endl << neighbors << std::endl;
-        lastrun = std::chrono::system_clock::now();
-        }
-
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-
-    }
-    */
 
     for(auto i = neighbors.begin(); i != neighbors.end(); i++) {
        int sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
@@ -91,6 +74,28 @@ void NeighborManager::run(volatile bool* running) {
        std::cout << *i << std::endl;
 
     }
+}
+
+void NeighborManager::run(volatile bool* running) {
+    scan();
+    send_neighbors();
+
+
+    // get neighbors regularly, not working yet
+    /*
+    std::chrono::time_point<std::chrono::system_clock> lastrun = 
+        std::chrono::system_clock::now() - std::chrono::seconds(60);;
+    while (running) {
+        if ((lastrun - std::chrono::system_clock::now()) > std::chrono::seconds(60)) {
+            neighbors = exec("for i in $(iw dev " + interface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
+        std::cout << std::endl << neighbors << std::endl;
+        lastrun = std::chrono::system_clock::now();
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    }
+    */
 
     // logic to receive neighbors of neighbors --> start at the beginning of thread
     // maybe use std::future for scanning

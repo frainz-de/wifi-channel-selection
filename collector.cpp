@@ -49,7 +49,7 @@ void Collector::run(volatile bool* running) {
         //remove characters until valid header is found
     if(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K) {
         std::cerr << "Invalid header, discarding until valid\n";
-        while(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K) {
+        while(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K && !scanfile.eof()) {
             scanfile.ignore(1);
         }
     }
@@ -122,7 +122,7 @@ void Collector::run(volatile bool* running) {
         //running = false;
     }
 
-    std::cout << "\ncaught SIGINT, exiting\n";
+    std::cout << "\ncaught SIGINT, writing data to disc\n";
 
     // output scan data
     std::ofstream outputscanfile("specdata.csv");
@@ -136,6 +136,7 @@ void Collector::run(volatile bool* running) {
     for (auto const& datapoint: tx_series) {
         outputtxfile << std::get<0>(datapoint).count() << ";" << std::get<1>(datapoint) << ";\n";
     }
+    std::cout << "finished writing, exiting\n";
 }
 
 // read a sample from proc, convert it to an object and store it in a vector
