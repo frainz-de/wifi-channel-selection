@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/poll.h>
 
 NeighborManager::NeighborManager(const std::string& interface) : interface(interface) {
     //TODO get this from a config file
@@ -17,8 +18,8 @@ NeighborManager::NeighborManager(const std::string& interface) : interface(inter
 }
 
 
-std::thread NeighborManager::start_thread(volatile bool* running) {
-    std::thread thread(&NeighborManager::run, this, running);
+std::thread NeighborManager::start_thread(volatile bool* running, int abortpipe) {
+    std::thread thread(&NeighborManager::run, this, running, abortpipe);
     return thread;
 }
 
@@ -82,7 +83,7 @@ void NeighborManager::send_neighbors() {
     }
 }
 
-void NeighborManager::run(volatile bool* running) {
+void NeighborManager::run(volatile bool* running, int abortpipe) {
     //scan();
     //send_neighbors();
 
@@ -114,16 +115,31 @@ void NeighborManager::run(volatile bool* running) {
     neighbor_addr.sin6_addr = in6addr_any;
     bind(sockfd, (const struct sockaddr *) &neighbor_addr, sizeof(neighbor_addr));
 
-    recvfrom(sockfd, (char *)buffer, sizeof(buffer), MSG_WAITALL, 0, 0);
-    std::string msg(buffer);
-    std::cout << std::endl << msg;
+    struct pollfd pfds[2];
+    pfds[0].fd = abortpipe; 
+    pfds[0].events = POLLIN;
+    pfds[1].fd = sockfd;
+    pfds[1].events = POLLIN;
 
-    nlohmann::json received_neighbors_json = nlohmann::json::parse(msg);
-    auto received_neighbors = received_neighbors_json["neighbors"];
 
-    for(nlohmann::json::iterator i = received_neighbors.begin(); i!=received_neighbors.end(); i++) {
-        std::cout << *i << std::endl;
-        neighbors_neighbors.insert(i->get<std::string>());
+    while (*running) {
+        poll(pfds, 2, 0);
+        if(pfds[1].revents != POLLIN) {
+            continue;
+        }
+
+        recvfrom(sockfd, (char *)buffer, sizeof(buffer), MSG_WAITALL, 0, 0);
+        std::string msg(buffer);
+        std::cout << std::endl << msg;
+
+        //TODO: catch parse errors
+        nlohmann::json received_neighbors_json = nlohmann::json::parse(msg);
+        auto received_neighbors = received_neighbors_json["neighbors"];
+
+        for(nlohmann::json::iterator i = received_neighbors.begin(); i!=received_neighbors.end(); i++) {
+            std::cout << *i << std::endl;
+            neighbors_neighbors.insert(i->get<std::string>());
+        }
     }
 
 }

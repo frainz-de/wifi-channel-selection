@@ -7,8 +7,8 @@
 class NeighborManager {
 public:
     NeighborManager(const std::string& interface);
-    void run(volatile bool* running);
-    std::thread start_thread(volatile bool* running);
+    void run(volatile bool* running, int abortpipe);
+    std::thread start_thread(volatile bool* running, int abortpipe);
     void scanandsend();
     
 private:

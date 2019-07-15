@@ -33,12 +33,14 @@ using TxDataPoint = std::tuple<std::chrono::milliseconds, long>;
 
 // global variable to exit main loop gracefully
 volatile bool running = true;
+int abortpipe[2];
 
 // catch SIGINT to terminate gracefully
 void signalHandler(int sig) {
     if(sig == SIGINT) {
         running = false;
         signal(SIGINT, SIG_DFL);
+        write(abortpipe[1], "a", 1);
     }
 }
 
@@ -65,9 +67,11 @@ int main(int argc, char* argv[]) {
 
     signal(SIGINT, signalHandler);
 
+    pipe(abortpipe);
+
     //std::thread neighbor_thread(manage_neighbors, interface);
     NeighborManager neighbor_manager(interface);
-    std::thread neighbor_thread = neighbor_manager.start_thread(&running);
+    std::thread neighbor_thread = neighbor_manager.start_thread(&running, abortpipe[0]);
 
     std::thread scan_thread([&] {neighbor_manager.scanandsend();});
     
