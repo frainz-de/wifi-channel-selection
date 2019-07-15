@@ -48,6 +48,7 @@ void NeighborManager::scan() {
         delete[] neighbors_cstr;
     }
     neighbors = neighbor_list;
+    neighbors_neighbors.insert(neighbors.begin(), neighbors.end());
 
 }
 
@@ -115,9 +116,9 @@ void NeighborManager::run(volatile bool* running) {
     nlohmann::json received_neighbors_json = nlohmann::json::parse(msg);
     auto received_neighbors = received_neighbors_json["neighbors"];
 
-    for(auto i = received_neighbors.begin(); i!=received_neighbors.end(); i++) {
+    for(nlohmann::json::iterator i = received_neighbors.begin(); i!=received_neighbors.end(); i++) {
         std::cout << *i << std::endl;
+        neighbors_neighbors.insert(i->get<std::string>());
     }
-
 
 }
