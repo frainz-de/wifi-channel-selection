@@ -22,6 +22,11 @@ std::thread NeighborManager::start_thread(volatile bool* running) {
     return thread;
 }
 
+void NeighborManager::scanandsend() {
+    scan();
+    send_neighbors();
+}
+
 void NeighborManager::scan() {
     std::cout << "\n starting scan\n";
     std::string neighbor_string;
@@ -78,8 +83,8 @@ void NeighborManager::send_neighbors() {
 }
 
 void NeighborManager::run(volatile bool* running) {
-    scan();
-    send_neighbors();
+    //scan();
+    //send_neighbors();
 
 
     // get neighbors regularly, not working yet

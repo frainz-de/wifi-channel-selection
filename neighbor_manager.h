@@ -9,6 +9,7 @@ public:
     NeighborManager(const std::string& interface);
     void run(volatile bool* running);
     std::thread start_thread(volatile bool* running);
+    void scanandsend();
     
 private:
     void scan();
