@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <set>
+#include <sstream>
 //sockets:
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -29,12 +30,12 @@ void NeighborManager::scanandsend() {
 }
 
 void NeighborManager::scan() {
-    std::cout << "\n starting scan\n";
+    std::cout << "\nstarting scan\n";
     std::string neighbor_string;
     neighbor_string = exec("for i in $(iw dev " + interface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
     std::cout << std::endl << neighbor_string << std::endl;
 
-    std::cout << "\n scan finished\n" << std::flush;
+    std::cout << "\nscan finished\n" << std::flush;
 
     // parse string with neighbor addresses into list
     std::set<std::string> neighbor_list;
@@ -130,16 +131,19 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
 
         recvfrom(sockfd, (char *)buffer, sizeof(buffer), MSG_WAITALL, 0, 0);
         std::string msg(buffer);
-        std::cout << std::endl << msg;
 
         //TODO: catch parse errors
         nlohmann::json received_neighbors_json = nlohmann::json::parse(msg);
         auto received_neighbors = received_neighbors_json["neighbors"];
 
+        std::stringstream output;
+        output << "\nreceived neighbors: ";
         for(nlohmann::json::iterator i = received_neighbors.begin(); i!=received_neighbors.end(); i++) {
-            std::cout << *i << std::endl;
+            output << *i << ", ";
             neighbors_neighbors.insert(i->get<std::string>());
         }
+        output << std::endl;
+        std::cout << output.str();
     }
 
 }
