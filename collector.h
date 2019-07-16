@@ -18,7 +18,9 @@ public:
 
     std::thread start_thread(volatile bool* running);
     fft_sample_ath10k* readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series);
+
 private:
+    void seek_to_header();
 
     std::string interface;
     std::string phy; // = "phy1";

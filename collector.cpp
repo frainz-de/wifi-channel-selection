@@ -11,6 +11,7 @@ extern "C" {
 #include <thread>
 #include <algorithm>
 #include <cassert>
+#include <sstream>
 
 Collector::Collector(std::string& interface) {
     
@@ -44,16 +45,21 @@ std::thread Collector::start_thread(volatile bool* running) {
     return collector_thread;
 }
 
-void Collector::run(volatile bool* running) {
-
-        //remove characters until valid header is found
+//remove characters until valid header is found
+void Collector::seek_to_header() {
     if(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K) {
         std::cerr << "Invalid header, discarding until valid\n";
         while(scanfile.peek() != ATH_FFT_SAMPLE_ATH10K && !scanfile.eof()) {
             scanfile.ignore(1);
         }
     }
+    std::cout << "seeking to header\n";
 
+}
+
+void Collector::run(volatile bool* running) {
+
+    seek_to_header();
 
     while (*running) {
         // read available samples
@@ -81,12 +87,14 @@ void Collector::run(volatile bool* running) {
         // get current time
         auto now = std::chrono::high_resolution_clock::now();
         auto in_time_t = std::chrono::system_clock::to_time_t(now);
-        //std::cout << std::ctime(&in_time_t) << std::endl;
-        //std::cout << std::flush << "\r" << std::ctime(&in_time_t) << "\r" << std::flush;
         std::string time = std::ctime(&in_time_t);
         rtrim(time);
-        std::cout << "\r" << time << ": collected " << sample_count
+
+        // print status
+        std::stringstream output;
+        output << "\r" << time << ": collected " << sample_count
             << " samples, rssi: " << avg_rssi << "    " << std::flush;
+        std::cout << output.str();
         
         // try to open network statistics file
         std::ifstream txfile;
@@ -152,7 +160,9 @@ fft_sample_ath10k* Collector::readSample(std::ifstream &scanfile, std::vector<Sa
 //    std::cout << "type: " << unsigned(sample->tlv.type) << std::endl;
 //    std::cout << "length: " << be16toh(sample->tlv.length) << std::endl;
     if(sample->tlv.type != ATH_FFT_SAMPLE_ATH10K) {
-        throw std::runtime_error("Wrong sample type, only ath10k samples are supportet atm\n");
+        //throw std::runtime_error("Wrong sample type, only ath10k samples are supportet atm\n");
+        seek_to_header();
+        //return;
     }
 
     // read rest of header
