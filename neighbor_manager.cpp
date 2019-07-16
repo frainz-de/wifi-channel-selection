@@ -5,6 +5,7 @@
 #include <iostream>
 #include <set>
 #include <sstream>
+#include <algorithm>
 //sockets:
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -30,12 +31,11 @@ void NeighborManager::scanandsend() {
 }
 
 void NeighborManager::scan() {
+    // TODO: scan regularly
+
     std::cout << "\nstarting scan\n";
     std::string neighbor_string;
     neighbor_string = exec("for i in $(iw dev " + interface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
-    std::cout << std::endl << neighbor_string << std::endl;
-
-    std::cout << "\nscan finished\n" << std::flush;
 
     // parse string with neighbor addresses into list
     std::set<std::string> neighbor_list;
@@ -57,6 +57,8 @@ void NeighborManager::scan() {
     neighbors = neighbor_list;
     neighbors_neighbors.insert(neighbors.begin(), neighbors.end());
 
+    std::replace(neighbor_string.begin(), neighbor_string.end(), '\n', ',');
+    std::cout << "\nscan finished, neighbors: " + neighbor_string + "\n" << std::flush;
 }
 
 void NeighborManager::send_neighbors() {
@@ -79,7 +81,6 @@ void NeighborManager::send_neighbors() {
        }
 
        sendto(sockfd, neighbor_msg_dump.c_str(), neighbor_msg_dump.length(), 0, (struct sockaddr*)&neighbor_addr, sizeof(neighbor_addr));
-       std::cout << *i << std::endl;
 
     }
 }
