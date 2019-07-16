@@ -65,9 +65,8 @@ void Collector::run(volatile bool* running) {
         // read available samples
         scanfile.peek();
         while(!scanfile.eof()) {
-            auto readsample = readSample(scanfile, received_series);
+            readSample(scanfile, received_series);
             sample_count++;
-            delete readsample; // looks like we don't actually need it here
         }
 
         //TODO running average of rssi
@@ -148,7 +147,7 @@ void Collector::run(volatile bool* running) {
 }
 
 // read a sample from proc, convert it to an object and store it in a vector
-fft_sample_ath10k* Collector::readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series) {
+void Collector::readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series) {
 
     scanfile.peek(); // check for EOF
     if(scanfile.eof()) {
@@ -162,7 +161,7 @@ fft_sample_ath10k* Collector::readSample(std::ifstream &scanfile, std::vector<Sa
     if(sample->tlv.type != ATH_FFT_SAMPLE_ATH10K) {
         //throw std::runtime_error("Wrong sample type, only ath10k samples are supportet atm\n");
         seek_to_header();
-        //return;
+        return;
     }
 
     // read rest of header
@@ -191,5 +190,5 @@ fft_sample_ath10k* Collector::readSample(std::ifstream &scanfile, std::vector<Sa
     received_series.push_back(readSample);
 
     scanfile.peek(); //set EOF bit if no data available
-    return sample;
+    delete sample;
 }
