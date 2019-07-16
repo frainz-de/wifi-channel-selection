@@ -90,10 +90,8 @@ void Collector::run(volatile bool* running) {
         rtrim(time);
 
         // print status
-        std::stringstream output;
-        output << "\r" << time << ": collected " << sample_count
+        std::cout << "\r" << time << ": collected " << sample_count
             << " samples, rssi: " << avg_rssi << "    " << std::flush;
-        std::cout << output.str();
         
         // try to open network statistics file
         std::ifstream txfile;
