@@ -1,26 +1,7 @@
-extern "C" {
-    #include "spectral_common.h"
-}
 #include <iostream>
-#include <fstream>
-#include <cstring>
-#include <stdio.h>
 #include <unistd.h>
-#include <chrono>
-#include <iomanip>
 #include <thread>
 #include <signal.h>
-#include <filesystem>
-#include <algorithm>
-#include <dirent.h>
-#include <list>
-#include <set>
-#include <nlohmann/json.hpp>
-//sockets:
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 //#include <Eigen/Dense>
 #include "sample.h"
 #include "collector.h"
