@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <thread>
 #include <signal.h>
+#include <tclap/CmdLine.h>
 //#include <Eigen/Dense>
 
 using DataPoint = std::tuple<int, double>;
@@ -30,20 +31,31 @@ int main(int argc, char* argv[]) {
     std::string phy;// = "phy1";
     std::string txpath;
     std::string scanpath;
-    int channel = 0;
+    int freq = 0;
 
-    // hacky argument handling
-    if(argc > 1) {
-        interface = argv[1];
+    // proper command line parsing
+    try {
+        TCLAP::CmdLine cmd("spectrometer and network correlation program");
+        TCLAP::ValueArg<std::string> specinterface_arg("s", "specinterface",
+                "Interface to use as spectrometer", false, "wlp1s0", "interface name", cmd);
+        TCLAP::ValueArg<std::string> netinterface_arg("n", "netinterface",
+                "Interface to use for networking", false, "wlp5s0", "interface name", cmd);
+        TCLAP::ValueArg<int> freq_arg("f", "frequency",
+                "Frequency to scan at", false, 0, "freq", cmd);
+
+        cmd.parse(argc, argv);
+
+        interface = specinterface_arg.getValue();
+
+        freq = freq_arg.getValue();
+
+    } catch (TCLAP::ArgException &e) {
+        std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
     }
 
-    if(argc > 2) {
-        channel = std::stoi(argv[2]);
-    }
-
-    if(channel) {
-        std::string mode = channel < 5000 ? "HT20" : "80MHz";
-        std::system(("/usr/bin/iw dev " + interface + " set freq " + std::to_string(channel) + " " + mode).c_str());
+    if(freq) {
+        std::string mode = freq < 5000 ? "HT20" : "80MHz";
+        std::system(("/usr/bin/iw dev " + interface + " set freq " + std::to_string(freq) + " " + mode).c_str());
     }
 
     signal(SIGINT, signalHandler);
