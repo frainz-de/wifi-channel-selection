@@ -15,22 +15,22 @@ extern "C" {
 
 Collector::Collector(std::string& specinterface, std::string& netinterface) {
     
-    { // clean up the c junk after deducing the interface
+    // deduce phy and spectral scan pathes from interface name
+    {
         auto dir = opendir(("/sys/class/net/" + specinterface + "/device/ieee80211/").c_str()); 
         if (!dir) {
             std::cerr << "Error deducing interface: " << strerror(errno) << std::endl;
             throw std::runtime_error("");
-
         }
         readdir(dir);
         readdir(dir);
         auto ent = readdir(dir);
         closedir(dir);
         phy = ent->d_name;
-        txpath = "/sys/class/net/" + specinterface + "/statistics/tx_bytes";
         scanpath = "/sys/kernel/debug/ieee80211/" + phy + "/ath10k/spectral_scan0";
     }
 
+    txpath = "/sys/class/net/" + netinterface + "/statistics/tx_bytes";
 
     // try to open (virtual) file in binary mode
     scanfile.open(scanpath ,std::fstream::in | std::fstream::binary);
