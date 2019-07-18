@@ -17,6 +17,8 @@ private:
 
     std::string interface; 
     std::string own_address;
+
+    //TODO make access to this thread safe
     std::set<std::string> neighbors;
     std::set<std::string> neighbors_neighbors;
 };
