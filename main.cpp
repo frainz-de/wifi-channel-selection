@@ -1,12 +1,12 @@
+#include "sample.h"
+#include "collector.h"
+#include "neighbor_manager.h"
+#include "helpers.h"
 #include <iostream>
 #include <unistd.h>
 #include <thread>
 #include <signal.h>
 //#include <Eigen/Dense>
-#include "sample.h"
-#include "collector.h"
-#include "neighbor_manager.h"
-#include "helpers.h"
 
 using DataPoint = std::tuple<int, double>;
 using TxDataPoint = std::tuple<std::chrono::milliseconds, long>;
