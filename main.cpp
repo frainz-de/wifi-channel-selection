@@ -27,7 +27,8 @@ void signalHandler(int sig) {
 }
 
 int main(int argc, char* argv[]) {
-    std::string interface = "wlp5s0";
+    std::string specinterface = "wlp5s0";
+    std::string netinterface;
     std::string phy;// = "phy1";
     std::string txpath;
     std::string scanpath;
@@ -45,7 +46,8 @@ int main(int argc, char* argv[]) {
 
         cmd.parse(argc, argv);
 
-        interface = specinterface_arg.getValue();
+        specinterface = specinterface_arg.getValue();
+        netinterface = netinterface_arg.getValue();
 
         freq = freq_arg.getValue();
 
@@ -55,20 +57,19 @@ int main(int argc, char* argv[]) {
 
     if(freq) {
         std::string mode = freq < 5000 ? "HT20" : "80MHz";
-        std::system(("/usr/bin/iw dev " + interface + " set freq " + std::to_string(freq) + " " + mode).c_str());
+        std::system(("/usr/bin/iw dev " + specinterface + " set freq " + std::to_string(freq) + " " + mode).c_str());
     }
 
     signal(SIGINT, signalHandler);
 
     pipe(abortpipe);
 
-    //std::thread neighbor_thread(manage_neighbors, interface);
-    NeighborManager neighbor_manager(interface);
+    NeighborManager neighbor_manager(specinterface);
     std::thread neighbor_thread = neighbor_manager.start_thread(&running, abortpipe[0]);
 
     std::thread scan_thread([&] {neighbor_manager.scanandsend();});
     
-    Collector collector(interface);
+    Collector collector(specinterface, netinterface);
     std::thread collector_thread = collector.start_thread(&running);
     
     neighbor_thread.join();

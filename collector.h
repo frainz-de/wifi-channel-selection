@@ -13,7 +13,7 @@ using TxDataPoint = std::tuple<std::chrono::milliseconds, long>;
 
 class Collector {
 public:
-    Collector(std::string& interface);
+    Collector(std::string& specinterface, std::string& netinterface);
     void run(volatile bool* running);
 
     std::thread start_thread(volatile bool* running);
@@ -22,7 +22,8 @@ public:
 private:
     void seek_to_header();
 
-    std::string interface;
+    std::string specinterface;
+    std::string netinterface;
     std::string phy; // = "phy1";
     std::string txpath;
     std::string scanpath;

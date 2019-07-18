@@ -13,10 +13,10 @@ extern "C" {
 #include <cassert>
 #include <sstream>
 
-Collector::Collector(std::string& interface) {
+Collector::Collector(std::string& specinterface, std::string& netinterface) {
     
     { // clean up the c junk after deducing the interface
-        auto dir = opendir(("/sys/class/net/" + interface + "/device/ieee80211/").c_str()); 
+        auto dir = opendir(("/sys/class/net/" + specinterface + "/device/ieee80211/").c_str()); 
         if (!dir) {
             std::cerr << "Error deducing interface: " << strerror(errno) << std::endl;
             throw std::runtime_error("");
@@ -27,7 +27,7 @@ Collector::Collector(std::string& interface) {
         auto ent = readdir(dir);
         closedir(dir);
         phy = ent->d_name;
-        txpath = "/sys/class/net/" + interface + "/statistics/tx_bytes";
+        txpath = "/sys/class/net/" + specinterface + "/statistics/tx_bytes";
         scanpath = "/sys/kernel/debug/ieee80211/" + phy + "/ath10k/spectral_scan0";
     }
 
@@ -71,8 +71,8 @@ void Collector::run(volatile bool* running) {
 
         //TODO running average of rssi
         if(sample_count > 1) {
-            auto previous = received_series.at(received_series.size()-2);
-            auto current = received_series.at(received_series.size()-1);
+            auto& previous = received_series.at(received_series.size()-2);
+            auto& current = received_series.at(received_series.size()-1);
             auto delta_t = current->timestamp - previous->timestamp;
             std::chrono::milliseconds tau(1000);
             //double alpha = delta_t / tau;
