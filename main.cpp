@@ -48,7 +48,6 @@ int main(int argc, char* argv[]) {
 
         specinterface = specinterface_arg.getValue();
         netinterface = netinterface_arg.getValue();
-
         freq = freq_arg.getValue();
 
     } catch (TCLAP::ArgException &e) {
@@ -62,16 +61,18 @@ int main(int argc, char* argv[]) {
 
     signal(SIGINT, signalHandler);
 
+    // create pipe to abort select calls
     pipe(abortpipe);
 
-    NeighborManager neighbor_manager(specinterface);
-    std::thread neighbor_thread = neighbor_manager.start_thread(&running, abortpipe[0]);
-
-    std::thread scan_thread([&] {neighbor_manager.scanandsend();});
-    
     Collector collector(specinterface, netinterface);
+    NeighborManager neighbor_manager(specinterface);
+
+    // create threads
+    std::thread neighbor_thread = neighbor_manager.start_thread(&running, abortpipe[0]);
+    std::thread scan_thread([&neighbor_manager] {neighbor_manager.scanandsend();});
     std::thread collector_thread = collector.start_thread(&running);
-    
+
+    // wait for all threads
     neighbor_thread.join();
     collector_thread.join();
     scan_thread.join();
