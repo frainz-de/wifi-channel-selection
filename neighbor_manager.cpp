@@ -17,6 +17,7 @@ NeighborManager::NeighborManager(const std::string& interface) : interface(inter
     //TODO get this from a config file
     std::string prefix("fd00::1"); // prefix to filter for addresses
     own_address = exec("ip a | grep -o '" + prefix + ".*/' | tr -d '/' | tr -d '\n'");
+    own_channel = stoi(exec("iw dev wlp5s0 info | grep channel | awk '{print $3}' | tr -d '('"));
 }
 
 
@@ -63,6 +64,7 @@ void NeighborManager::scan() {
 
 void NeighborManager::send_neighbors() {
     nlohmann::json neighbor_msg;
+    neighbor_msg["channel"] = own_channel;
     nlohmann::json neighbor_json(neighbors);
     neighbor_msg["neighbors"] = neighbor_json;
 
