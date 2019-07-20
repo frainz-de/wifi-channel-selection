@@ -21,5 +21,6 @@ private:
 
     //TODO make access to this thread safe
     std::set<std::string> neighbors;
+    //TODO store as pairs of address and channel, maybe own class?
     std::set<std::string> neighbors_neighbors;
 };

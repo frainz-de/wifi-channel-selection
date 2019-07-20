@@ -136,17 +136,21 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
         std::string msg(buffer);
 
         //TODO: catch parse errors
-        nlohmann::json received_neighbors_json = nlohmann::json::parse(msg);
-        auto received_neighbors = received_neighbors_json["neighbors"];
+        nlohmann::json msg_json = nlohmann::json::parse(msg);
 
-        std::stringstream output;
-        output << "\nreceived neighbors: ";
-        for(nlohmann::json::iterator i = received_neighbors.begin(); i!=received_neighbors.end(); i++) {
-            output << *i << ", ";
-            neighbors_neighbors.insert(i->get<std::string>());
+
+        if(msg_json.find("neighbors") != msg_json.end()) {
+            auto received_neighbors = msg_json["neighbors"];
+
+            std::stringstream output;
+            output << "\nreceived neighbors: ";
+            for(nlohmann::json::iterator i = received_neighbors.begin(); i!=received_neighbors.end(); i++) {
+                output << *i << ", ";
+                neighbors_neighbors.insert(i->get<std::string>());
+            }
+            output << std::endl;
+            std::cout << output.str();
         }
-        output << std::endl;
-        std::cout << output.str();
     }
 
 }
