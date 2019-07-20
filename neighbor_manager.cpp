@@ -64,7 +64,9 @@ void NeighborManager::scan() {
 
 void NeighborManager::send_neighbors() {
     nlohmann::json neighbor_msg;
-    neighbor_msg["channel"] = own_channel;
+    //nlohmann::json self;
+    neighbor_msg["self"]["address"] = own_address;
+    neighbor_msg["self"]["channel"] = own_channel;
     nlohmann::json neighbor_json(neighbors);
     neighbor_msg["neighbors"] = neighbor_json;
 
