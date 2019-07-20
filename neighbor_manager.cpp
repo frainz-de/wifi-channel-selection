@@ -153,6 +153,12 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
             output << std::endl;
             std::cout << output.str();
         }
+
+        if(msg_json.find("self") != msg_json.end()) {
+            channels[msg_json["self"]["address"]] = msg_json["self"]["channel"];
+            std::cout << "\nassigning channel " << msg_json["self"]["channel"]
+                << " to " << msg_json["self"]["address"] << std::endl;
+        }
     }
 
 }

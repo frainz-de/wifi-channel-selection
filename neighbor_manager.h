@@ -1,15 +1,18 @@
 #pragma once
 
+#include "neighbor.h"
 #include <thread>
 #include <string>
 #include <set>
+#include <map>
 
 class NeighborManager {
 public:
     NeighborManager(const std::string& interface);
     void run(volatile bool* running, int abortpipe);
-    std::thread start_thread(volatile bool* running, int abortpipe);
     void scanandsend();
+
+    std::thread start_thread(volatile bool* running, int abortpipe);
     
 private:
     void scan();
@@ -23,4 +26,6 @@ private:
     std::set<std::string> neighbors;
     //TODO store as pairs of address and channel, maybe own class?
     std::set<std::string> neighbors_neighbors;
+
+    std::map<std::string, int> channels;
 };
