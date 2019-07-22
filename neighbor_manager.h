@@ -5,12 +5,15 @@
 #include <string>
 #include <set>
 #include <map>
+#include <mutex>
+#include <nlohmann/json.hpp>
 
 class NeighborManager {
 public:
     NeighborManager(const std::string& interface);
     void run(volatile bool* running, int abortpipe);
     void scanandsend();
+    void send_tx(nlohmann::json& txdata);
 
     std::thread start_thread(volatile bool* running, int abortpipe);
     
@@ -18,6 +21,8 @@ private:
     void scan();
     void send_neighbors();
     void send_msg(const std::string address, const std::string msg);
+
+    std::mutex send_lock;
 
     std::string interface; 
     std::string own_address;

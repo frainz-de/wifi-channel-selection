@@ -12,6 +12,7 @@ extern "C" {
 #include <algorithm>
 #include <cassert>
 #include <sstream>
+#include <nlohmann/json.hpp>
 
 Collector::Collector(std::string& specinterface, std::string& netinterface) {
     
@@ -44,6 +45,11 @@ std::thread Collector::start_thread(volatile bool* running) {
     std::thread collector_thread(&Collector::run, this, running);
     return collector_thread;
 }
+
+void Collector::set_neighbor_manager(NeighborManager* neighbor_manager) {
+    this->neighbor_manager = neighbor_manager;
+}
+
 
 //remove characters until valid header is found
 void Collector::seek_to_header() {
@@ -102,7 +108,6 @@ void Collector::run(volatile bool* running) {
         }
         
         /*
-        // fill tx statistics vector
         // txfile.seekg(0, std::ios_base::beg); // seek to the beginning to get a new value
         txfile.seekg(0); // seek to the beginning to get a new value
         if(txfile.fail()) {
@@ -114,6 +119,8 @@ void Collector::run(volatile bool* running) {
         //txfile >> tx_bytes_string;
         //std::getline(txfile, tx_bytes_string);
         //long tx_bytes = std::stol(tx_bytes_string); // convert string to long
+
+        // fill tx statistics vector
         long tx_bytes;
         txfile >> tx_bytes;
         TxDataPoint txdatapoint(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()),
@@ -121,11 +128,30 @@ void Collector::run(volatile bool* running) {
         last_tx_bytes = tx_bytes;
         tx_series.push_back(txdatapoint);
 
+        // sleep for a millisecond
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-//        std::cout << "waiting\n";
         scanfile.clear();
-        //running = false;
     }
+
+    // write last second into json
+    auto now = std::chrono::high_resolution_clock::now();
+    auto current_time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+    auto begin_time = current_time - std::chrono::seconds(1);
+    //auto index = std::lower_bound(tx_series.begin(), tx_series.end(), [&begin_time](const auto& s)
+    //        {return std::get<0>(s) <= begin_time; });
+    auto json = nlohmann::json::array();
+    //json.push_back("asdf");
+    for (auto i = tx_series.size()-500; i < tx_series.size(); i++) {
+        json.push_back(std::get<1>(tx_series.at(i)));
+    }
+    auto dump = json.dump();
+    auto ubjson = nlohmann::json::to_ubjson(json);
+    std::cout << ubjson.size() << std::endl;
+    auto back = nlohmann::json::from_ubjson(ubjson);
+    auto backdump = back.dump();
+    neighbor_manager->send_tx(json);
+
+
 
     std::cout << "\ncaught SIGINT, writing data to disc\n";
 

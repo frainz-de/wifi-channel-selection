@@ -73,10 +73,12 @@ void NeighborManager::send_msg(const std::string address, const std::string msg)
       throw std::runtime_error("address parsing failed");
    }
 
+   send_lock.lock();
    e = sendto(sockfd, msg.c_str(), msg.length(), 0, (struct sockaddr*)&addr_struct, sizeof(addr_struct));
    if (e == -1) {
        throw std::runtime_error("sending failed");
    }
+   send_lock.unlock();
 
 }
 
@@ -93,8 +95,17 @@ void NeighborManager::send_neighbors() {
 
     for(auto i = neighbors.begin(); i != neighbors.end(); i++) {
        send_msg(std::string(*i), neighbor_msg_dump);
-
     }
+}
+
+void NeighborManager::send_tx(nlohmann::json& txdata) {
+    nlohmann::json msg;
+    msg["txdata"] = txdata;
+    auto dump = msg.dump();
+    for(auto i = neighbors.begin(); i != neighbors.end(); i++) {
+       send_msg(std::string(*i), dump);
+    }
+
 }
 
 void NeighborManager::run(volatile bool* running, int abortpipe) {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "neighbor_manager.h"
+
 #include <string>
 #include <fstream>
 #include <vector>
@@ -18,9 +20,12 @@ public:
 
     std::thread start_thread(volatile bool* running);
     void readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series);
+    void set_neighbor_manager(NeighborManager* neighbor_manager);
 
 private:
     void seek_to_header();
+
+    NeighborManager* neighbor_manager;
 
     std::string specinterface;
     std::string netinterface;
