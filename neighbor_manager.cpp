@@ -62,6 +62,24 @@ void NeighborManager::scan() {
     std::cout << "\nscan finished, neighbors: " + neighbor_string + "\n" << std::flush;
 }
 
+void NeighborManager::send_msg(const std::string address, const std::string msg) {
+   int sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
+   struct sockaddr_in6 addr_struct = {};
+   addr_struct.sin6_family = AF_INET6;
+   addr_struct.sin6_port = htons (8901);
+   //addr_struct.sin6_addr.s6_addr= u6_addr8(i->c_str());
+   int e = inet_pton(AF_INET6, address.c_str(), &(addr_struct.sin6_addr));
+   if (e <= 0) {
+      throw std::runtime_error("address parsing failed");
+   }
+
+   e = sendto(sockfd, msg.c_str(), msg.length(), 0, (struct sockaddr*)&addr_struct, sizeof(addr_struct));
+   if (e == -1) {
+       throw std::runtime_error("sending failed");
+   }
+
+}
+
 void NeighborManager::send_neighbors() {
     nlohmann::json neighbor_msg;
     //nlohmann::json self;
@@ -74,17 +92,7 @@ void NeighborManager::send_neighbors() {
 
 
     for(auto i = neighbors.begin(); i != neighbors.end(); i++) {
-       int sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
-       struct sockaddr_in6 neighbor_addr = {};
-       neighbor_addr.sin6_family = AF_INET6;
-       neighbor_addr.sin6_port = htons (8901);
-       //neighbor_addr.sin6_addr.s6_addr= u6_addr8(i->c_str());
-       int e = inet_pton(AF_INET6, i->c_str(), &(neighbor_addr.sin6_addr));
-       if (e <= 0) {
-          throw std::runtime_error("address parsing failed");
-       }
-
-       sendto(sockfd, neighbor_msg_dump.c_str(), neighbor_msg_dump.length(), 0, (struct sockaddr*)&neighbor_addr, sizeof(neighbor_addr));
+       send_msg(std::string(*i), neighbor_msg_dump);
 
     }
 }
@@ -156,7 +164,7 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
 
         if(msg_json.find("self") != msg_json.end()) {
             channels[msg_json["self"]["address"]] = msg_json["self"]["channel"];
-            std::cout << "\nassigning channel " << msg_json["self"]["channel"]
+            std::cout << "\nnoting channel " << msg_json["self"]["channel"]
                 << " to " << msg_json["self"]["address"] << std::endl;
         }
     }

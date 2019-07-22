@@ -17,6 +17,7 @@ public:
 private:
     void scan();
     void send_neighbors();
+    void send_msg(const std::string address, const std::string msg);
 
     std::string interface; 
     std::string own_address;
