@@ -102,6 +102,7 @@ void NeighborManager::send_tx(nlohmann::json& txdata) {
     nlohmann::json msg;
     msg["txdata"] = txdata;
     auto dump = msg.dump();
+    // TODO use neighborsneighbors
     for(auto i = neighbors.begin(); i != neighbors.end(); i++) {
        send_msg(std::string(*i), dump);
     }
