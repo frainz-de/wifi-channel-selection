@@ -7,6 +7,7 @@
 #include <set>
 #include <sstream>
 #include <algorithm>
+#include <vector>
 //sockets:
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -69,6 +70,8 @@ void NeighborManager::scan() {
 }
 
 void NeighborManager::send_msg(const std::string address, const std::string msg) {
+    std::cerr << "\nsending message: " << msg << std::endl;
+
    int sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
    struct sockaddr_in6 addr_struct = {};
    addr_struct.sin6_family = AF_INET6;
@@ -106,7 +109,9 @@ void NeighborManager::send_neighbors() {
 
 void NeighborManager::send_tx() {
     nlohmann::json msg;
-    msg["txdata"] = collector->get_tx(500);
+    auto txdata = collector->get_tx(500);
+    msg["txdata"] = txdata;
+    //msg["txdata"] = collector->get_tx(500);
     auto dump = msg.dump();
     // TODO use neighborsneighbors
     for(auto i = neighbors_neighbors.begin(); i != neighbors_neighbors.end(); i++) {
@@ -138,7 +143,8 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
     // logic to receive neighbors of neighbors --> start at the beginning of thread
     // maybe use std::future for scanning
     int sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
-    char buffer[1500] = {};
+    //char buffer[1500] = {};
+    std::vector<char> buffer(1500);
 
     struct sockaddr_in6 neighbor_addr = {};
     neighbor_addr.sin6_family = AF_INET6;
@@ -154,13 +160,21 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
 
 
     while (*running) {
+        std::fill(buffer.begin(), buffer.end(), 0);
         poll(pfds, 2, 0);
         if(pfds[1].revents != POLLIN) {
             continue;
         }
 
-        recvfrom(sockfd, (char *)buffer, sizeof(buffer), MSG_WAITALL, 0, 0);
-        std::string msg(buffer);
+        size_t received_bytes = recvfrom(sockfd, (char *)buffer.data(), buffer.size(), MSG_WAITALL | MSG_TRUNC, 0, 0);
+        if (received_bytes <= 0) {
+            throw std::runtime_error("receiving failed");
+        }
+        if (received_bytes > buffer.size()) {
+            throw std::runtime_error("receive buffer too small");
+        }
+
+        std::string msg(buffer.begin(), buffer.end());
 
         std::cerr << "\nreceived msg: " << msg << std::endl;
 
