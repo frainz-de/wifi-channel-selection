@@ -695,3 +695,5 @@ set print sevenbit-strings off
 
 #set follow-fork-mode child
 #set detach-on-fork off
+
+set print elements 0
