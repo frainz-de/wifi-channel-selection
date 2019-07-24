@@ -1,6 +1,6 @@
 #pragma once
 
-#include "neighbor_manager.h"
+//#include "neighbor_manager.h"
 
 #include <string>
 #include <fstream>
@@ -9,9 +9,11 @@
 #include <chrono>
 #include <tuple>
 #include <thread>
+#include <nlohmann/json.hpp>
 
 using DataPoint = std::tuple<int, double>;
 using TxDataPoint = std::tuple<std::chrono::milliseconds, long>;
+class NeighborManager;
 
 class Collector {
 public:
@@ -21,6 +23,8 @@ public:
     std::thread start_thread(volatile bool* running);
     void readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series);
     void set_neighbor_manager(NeighborManager* neighbor_manager);
+
+    nlohmann::json get_tx(size_t max_size);
 
 private:
     void seek_to_header();

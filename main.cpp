@@ -68,6 +68,7 @@ int main(int argc, char* argv[]) {
     NeighborManager neighbor_manager(specinterface);
 
     collector.set_neighbor_manager(&neighbor_manager);
+    neighbor_manager.set_collector(&collector);
 
     // create threads
     std::thread neighbor_thread = neighbor_manager.start_thread(&running, abortpipe[0]);

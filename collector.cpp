@@ -3,6 +3,7 @@ extern "C" {
 }
 #include "collector.h"
 #include "helpers.h"
+#include "neighbor_manager.h"
 
 #include <iostream>
 #include <string>
@@ -48,6 +49,22 @@ std::thread Collector::start_thread(volatile bool* running) {
 
 void Collector::set_neighbor_manager(NeighborManager* neighbor_manager) {
     this->neighbor_manager = neighbor_manager;
+}
+
+nlohmann::json Collector::get_tx(size_t max_size) {
+    // write last second into json
+    auto now = std::chrono::high_resolution_clock::now();
+    auto current_time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+    auto begin_time = current_time - std::chrono::seconds(1);
+    auto json = nlohmann::json::array();
+    //int i = tx_series.size()-1;
+    for (auto i = tx_series.size()-max_size; i < tx_series.size(); i++) {
+    //while(json.get_ref<std::string&>().size() < max_size) {
+        json.push_back(std::get<1>(tx_series.at(i)));
+        //i--;
+    }
+    return json;
+
 }
 
 
@@ -149,7 +166,7 @@ void Collector::run(volatile bool* running) {
     std::cout << ubjson.size() << std::endl;
     auto back = nlohmann::json::from_ubjson(ubjson);
     auto backdump = back.dump();
-    neighbor_manager->send_tx(json);
+    //neighbor_manager->send_tx(json);
 
 
 

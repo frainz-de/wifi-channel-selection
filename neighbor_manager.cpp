@@ -1,5 +1,6 @@
 #include "neighbor_manager.h"
 #include "helpers.h"
+#include "collector.h"
 
 #include <nlohmann/json.hpp>
 #include <iostream>
@@ -29,6 +30,11 @@ std::thread NeighborManager::start_thread(volatile bool* running, int abortpipe)
 void NeighborManager::scanandsend() {
     scan();
     send_neighbors();
+    send_tx();
+}
+
+void NeighborManager::set_collector(Collector* collector) {
+    this->collector = collector;
 }
 
 void NeighborManager::scan() {
@@ -98,15 +104,14 @@ void NeighborManager::send_neighbors() {
     }
 }
 
-void NeighborManager::send_tx(nlohmann::json& txdata) {
+void NeighborManager::send_tx() {
     nlohmann::json msg;
-    msg["txdata"] = txdata;
+    msg["txdata"] = collector->get_tx(500);
     auto dump = msg.dump();
     // TODO use neighborsneighbors
-    for(auto i = neighbors.begin(); i != neighbors.end(); i++) {
+    for(auto i = neighbors_neighbors.begin(); i != neighbors_neighbors.end(); i++) {
        send_msg(std::string(*i), dump);
     }
-
 }
 
 void NeighborManager::run(volatile bool* running, int abortpipe) {
@@ -156,6 +161,8 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
 
         recvfrom(sockfd, (char *)buffer, sizeof(buffer), MSG_WAITALL, 0, 0);
         std::string msg(buffer);
+
+        std::cerr << "\nreceived msg: " << msg << std::endl;
 
         //TODO: catch parse errors
         nlohmann::json msg_json = nlohmann::json::parse(msg);

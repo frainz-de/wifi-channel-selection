@@ -1,6 +1,7 @@
 #pragma once
 
 #include "neighbor.h"
+//#include "collector.h"
 #include <thread>
 #include <string>
 #include <set>
@@ -8,12 +9,15 @@
 #include <mutex>
 #include <nlohmann/json.hpp>
 
+class Collector;
+
 class NeighborManager {
 public:
     NeighborManager(const std::string& interface);
     void run(volatile bool* running, int abortpipe);
     void scanandsend();
-    void send_tx(nlohmann::json& txdata);
+    void send_tx();
+    void set_collector(Collector* collector);
 
     std::thread start_thread(volatile bool* running, int abortpipe);
     
@@ -21,6 +25,8 @@ private:
     void scan();
     void send_neighbors();
     void send_msg(const std::string address, const std::string msg);
+
+    Collector* collector;
 
     std::mutex send_lock;
 
