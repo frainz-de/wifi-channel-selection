@@ -70,7 +70,7 @@ void NeighborManager::scan() {
 }
 
 void NeighborManager::send_msg(const std::string address, const std::string msg) {
-    std::cerr << "\nsending message: " << msg << std::endl;
+    //std::cerr << "\nsending message: " << msg << std::endl;
 
    int sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
    struct sockaddr_in6 addr_struct = {};
@@ -109,7 +109,7 @@ void NeighborManager::send_neighbors() {
 
 void NeighborManager::send_tx() {
     nlohmann::json msg;
-    auto txdata = collector->get_tx(500);
+    auto txdata = collector->get_tx(1500);
     msg["txdata"] = txdata;
     //msg["txdata"] = collector->get_tx(500);
     auto dump = msg.dump();
@@ -144,7 +144,7 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
     // maybe use std::future for scanning
     int sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
     //char buffer[1500] = {};
-    std::vector<char> buffer(1500);
+    std::vector<char> buffer(65535);
 
     struct sockaddr_in6 neighbor_addr = {};
     neighbor_addr.sin6_family = AF_INET6;
