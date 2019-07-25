@@ -121,9 +121,6 @@ void NeighborManager::send_tx() {
 }
 
 void NeighborManager::run(volatile bool* running, int abortpipe) {
-    //scan();
-    //send_neighbors();
-
 
     // get neighbors regularly, not working yet
     /*
@@ -212,6 +209,16 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
             channels[msg_json["self"]["address"]] = msg_json["self"]["channel"];
             std::cout << "\nnoting channel " << msg_json["self"]["channel"]
                 << " to " << msg_json["self"]["address"] << std::endl;
+        }
+
+        if(msg_json.find("txmsg") != msg_json.end()) {
+            if(msg_json["self"]["channel"] == own_channel) {
+                auto txdata = msg_json["txmsg"]["txdata"];
+                //std::vector<long> txvector(txdata);
+                std::vector<long> txvector;
+                txdata.get_to(txvector);
+                assert (txdata.size() == txvector.size());
+            }
         }
     }
 
