@@ -64,9 +64,9 @@ nlohmann::json Collector::get_tx(size_t max_size) {
         txdata.push_back(std::get<1>(tx_series.at(i)));
         //i--;
     }
-    txmsg["txmsg"] = txdata;
+    txmsg["txdata"] = txdata;
     txmsg["timestamp"] = current_time.count();
-    return txdata;
+    return txmsg;
 
 }
 

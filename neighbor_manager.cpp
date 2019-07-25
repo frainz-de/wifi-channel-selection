@@ -109,9 +109,10 @@ void NeighborManager::send_neighbors() {
 
 void NeighborManager::send_tx() {
     nlohmann::json msg;
-    auto txdata = collector->get_tx(1500);
-    msg["txdata"] = txdata;
-    //msg["txdata"] = collector->get_tx(500);
+    msg["self"]["address"] = own_address;
+    msg["self"]["channel"] = own_channel;
+    auto txmsg = collector->get_tx(1500);
+    msg["txmsg"] = txmsg;
     auto dump = msg.dump();
     // TODO use neighborsneighbors
     for(auto i = neighbors_neighbors.begin(); i != neighbors_neighbors.end(); i++) {
@@ -183,7 +184,7 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
         std::vector<char> src_addr_b(50);
         inet_ntop(src_addr.sa_family, &src_addr.sa_data, src_addr_c, 50);
         //inet_ntop(src_addr.sa_family, src_addr.sa_data, src_addr_b.data(), 50);
-        auto e = inet_ntop(src_addr.sa_family, &src_addr.sa_data, src_addr_b.data(), 50);
+        inet_ntop(src_addr.sa_family, &src_addr.sa_data, src_addr_b.data(), 50);
 
 
         std::string msg(buffer.begin(), std::next(buffer.begin(), received_bytes));
