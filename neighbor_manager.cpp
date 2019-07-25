@@ -166,7 +166,11 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
             continue;
         }
 
-        size_t received_bytes = recvfrom(sockfd, (char *)buffer.data(), buffer.size(), MSG_WAITALL | MSG_TRUNC, 0, 0);
+        sockaddr src_addr;
+        socklen_t addrlen = sizeof(src_addr);
+
+        size_t received_bytes = recvfrom(sockfd, (char *)buffer.data(), buffer.size(),
+                MSG_WAITALL | MSG_TRUNC, &src_addr, &addrlen);
         if (received_bytes <= 0) {
             throw std::runtime_error("receiving failed");
         }
@@ -174,7 +178,15 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
             throw std::runtime_error("receive buffer too small");
         }
 
-        std::string msg(buffer.begin(), buffer.end());
+        // try to get receiver address, gives back garbage
+        char src_addr_c[INET6_ADDRSTRLEN];
+        std::vector<char> src_addr_b(50);
+        inet_ntop(src_addr.sa_family, &src_addr.sa_data, src_addr_c, 50);
+        //inet_ntop(src_addr.sa_family, src_addr.sa_data, src_addr_b.data(), 50);
+        auto e = inet_ntop(src_addr.sa_family, &src_addr.sa_data, src_addr_b.data(), 50);
+
+
+        std::string msg(buffer.begin(), std::next(buffer.begin(), received_bytes));
 
         std::cerr << "\nreceived msg: " << msg << std::endl;
 
