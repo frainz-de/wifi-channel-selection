@@ -214,10 +214,11 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
         if(msg_json.find("txmsg") != msg_json.end()) {
             if(msg_json["self"]["channel"] == own_channel) {
                 auto txdata = msg_json["txmsg"]["txdata"];
-                //std::vector<long> txvector(txdata);
                 std::vector<long> txvector;
                 txdata.get_to(txvector);
+                auto timestamp = msg_json["txmsg"]["timestamp"];
                 assert (txdata.size() == txvector.size());
+                collector->correlate(txdata, timestamp);
             }
         }
     }

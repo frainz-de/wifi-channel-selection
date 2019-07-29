@@ -67,7 +67,24 @@ nlohmann::json Collector::get_tx(size_t max_size) {
     txmsg["txdata"] = txdata;
     txmsg["timestamp"] = current_time.count();
     return txmsg;
+}
 
+int Collector::correlate(const std::vector<double>& txvector, long timeint) {
+    if(received_series.size() == 0) {
+        std::cerr << "\ncannot correlate without data\n";
+        return NULL;
+    }
+    auto timestamp = std::chrono::milliseconds(timeint);
+    auto index = received_series.rbegin();
+    auto last = (*index)->timestamp;
+
+    for(; (*index)->timestamp > timestamp; ++index) {
+        bool equal = (index == received_series.rbegin());
+    }
+
+    //for(; index != received_series.rend(); ++index) {
+    //    auto local_timestamp = (*index)->timestamp;
+    //}
 }
 
 
