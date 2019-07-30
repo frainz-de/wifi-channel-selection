@@ -75,16 +75,30 @@ int Collector::correlate(const std::vector<double>& txvector, long timeint) {
         return NULL;
     }
     auto timestamp = std::chrono::milliseconds(timeint);
-    auto index = received_series.rbegin();
-    auto last = (*index)->timestamp;
+    auto rindex = received_series.rbegin();
+    auto last = (*rindex)->timestamp;
 
-    for(; (*index)->timestamp > timestamp; ++index) {
-        bool equal = (index == received_series.rbegin());
+    for(; (*rindex)->timestamp > timestamp; ++rindex) {
+        bool equal = (rindex == received_series.rbegin());
     }
 
-    //for(; index != received_series.rend(); ++index) {
-    //    auto local_timestamp = (*index)->timestamp;
-    //}
+    auto findex = rindex.base();
+    auto ftimestamp = (*findex)->timestamp;
+
+    auto bdistance = rindex - received_series.rend();
+    auto fdistance = findex - received_series.begin();
+
+    auto tx_timestamp = timestamp;
+    for(auto vindex = txvector.begin(); vindex != txvector.end(); ++vindex) {
+        tx_timestamp += std::chrono::milliseconds(1);
+        double avg = 0;
+        int counter = 0;
+        for(; (*findex)->timestamp < tx_timestamp; ++findex) {
+            avg += (*findex)->rssi;
+            ++counter;
+        }
+       avg /= counter;
+    }
 }
 
 
