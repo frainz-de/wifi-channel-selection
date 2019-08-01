@@ -25,7 +25,7 @@ public:
     void set_neighbor_manager(NeighborManager* neighbor_manager);
 
     nlohmann::json get_tx(size_t max_size);
-    int correlate(const std::vector<double>& txvector, long timeint);
+    double correlate(const std::vector<double>& txvector, long timeint);
 
 private:
     void seek_to_header();

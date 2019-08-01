@@ -69,10 +69,10 @@ nlohmann::json Collector::get_tx(size_t max_size) {
     return txmsg;
 }
 
-int Collector::correlate(const std::vector<double>& txvector, long timeint) {
+double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     if(received_series.size() == 0) {
         std::cerr << "\ncannot correlate without data\n";
-        return NULL;
+        return nan("");
     }
     auto timestamp = std::chrono::milliseconds(timeint);
     auto rindex = received_series.rbegin();
@@ -89,16 +89,29 @@ int Collector::correlate(const std::vector<double>& txvector, long timeint) {
     auto fdistance = findex - received_series.begin();
 
     auto tx_timestamp = timestamp;
+    double prodsum = 0;
+
     for(auto vindex = txvector.begin(); vindex != txvector.end(); ++vindex) {
         tx_timestamp += std::chrono::milliseconds(1);
-        double avg = 0;
+        double avg_rssi = 0;
         int counter = 0;
-        for(; (*findex)->timestamp < tx_timestamp; ++findex) {
-            avg += (*findex)->rssi;
+        //for(; (*findex)->timestamp < tx_timestamp; ++findex) {
+        while((*findex)->timestamp < tx_timestamp) {
+            avg_rssi += (*findex)->rssi;
             ++counter;
+            ++findex;
+            //assert((*findex));
+            assert(findex != received_series.end());
         }
-       avg /= counter;
+        avg_rssi /= (double) counter;
+        auto prod = *vindex * avg_rssi;
+        if(counter) {
+            prodsum += prod;
+        }
     }
+    // TODO: use pearson correlation (normalize)
+
+    return prodsum;
 }
 
 
