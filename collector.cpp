@@ -79,14 +79,15 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     auto last = (*rindex)->timestamp;
 
     for(; (*rindex)->timestamp > timestamp; ++rindex) {
-        bool equal = (rindex == received_series.rbegin());
+        //bool equal = (rindex == received_series.rbegin());
     }
 
     auto findex = rindex.base();
+    assert (findex != received_series.begin());
     auto ftimestamp = (*findex)->timestamp;
 
-    auto bdistance = rindex - received_series.rend();
-    auto fdistance = findex - received_series.begin();
+    //auto bdistance = rindex - received_series.rend();
+    //auto fdistance = findex - received_series.begin();
 
     auto tx_timestamp = timestamp;
     double prodsum = 0;
@@ -96,12 +97,13 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
         double avg_rssi = 0;
         int counter = 0;
         //for(; (*findex)->timestamp < tx_timestamp; ++findex) {
-        while((*findex)->timestamp < tx_timestamp) {
+        //TODO maybe correlate slightly earlier intervals
+        while(findex != received_series.end() &&  (*findex)->timestamp < tx_timestamp) {
             avg_rssi += (*findex)->rssi;
             ++counter;
             ++findex;
             //assert((*findex));
-            assert(findex != received_series.end());
+            //assert(findex != received_series.end());
         }
         avg_rssi /= (double) counter;
         auto prod = *vindex * avg_rssi;
