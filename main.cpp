@@ -72,8 +72,11 @@ int main(int argc, char* argv[]) {
 
     // create threads
     std::thread neighbor_thread = neighbor_manager.start_thread(&running, abortpipe[0]);
+    pthread_setname_np(neighbor_thread.native_handle(), "neighbor_thread");
     std::thread scan_thread([&neighbor_manager] {neighbor_manager.scanandsend();});
+    pthread_setname_np(scan_thread.native_handle(), "scan_thread");
     std::thread collector_thread = collector.start_thread(&running);
+    pthread_setname_np(collector_thread.native_handle(), "collector_thread");
 
     // wait for all threads
     neighbor_thread.join();
