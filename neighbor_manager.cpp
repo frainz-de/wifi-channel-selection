@@ -159,7 +159,7 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
 
     while (*running) {
         std::fill(buffer.begin(), buffer.end(), 0);
-        poll(pfds, 2, 0);
+        poll(pfds, 2, -1);
         if(pfds[1].revents != POLLIN) {
             continue;
         }
@@ -199,7 +199,9 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
             output << "\nreceived neighbors: ";
             for(nlohmann::json::iterator i = received_neighbors.begin(); i!=received_neighbors.end(); i++) {
                 output << *i << ", ";
-                neighbors_neighbors.insert(i->get<std::string>());
+                if (*i != own_address) {
+                    neighbors_neighbors.insert(i->get<std::string>());
+                }
             }
             output << std::endl;
             std::cout << output.str();
@@ -212,13 +214,17 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
         }
 
         if(msg_json.find("txmsg") != msg_json.end()) {
-            if(msg_json["self"]["channel"] == own_channel) {
+            auto channel = msg_json.at("self").at("channel");
+            //if(msg_json["self"]["channel"] == own_channel) {
+            //TODO put back in, only this is only for debugging
+            {
                 auto txdata = msg_json["txmsg"]["txdata"];
                 std::vector<long> txvector;
                 txdata.get_to(txvector);
                 auto timestamp = msg_json["txmsg"]["timestamp"];
                 assert (txdata.size() == txvector.size());
-                collector->correlate(txdata, timestamp);
+                auto correlation = collector->correlate(txdata, timestamp);
+                std::cout << ("\n correlation: " + std::to_string(correlation) + "\n");
             }
         }
     }
