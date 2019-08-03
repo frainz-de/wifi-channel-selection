@@ -1,6 +1,7 @@
 #include "neighbor_manager.h"
 #include "helpers.h"
 #include "collector.h"
+#include "wpa_ctrl.h"
 
 #include <nlohmann/json.hpp>
 #include <iostream>

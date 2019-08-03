@@ -1,9 +1,9 @@
-project('collector', 'cpp',
+project('collector', ['cpp','c'],
     default_options : ['c_std=c17', 'cpp_std=c++17'])
 #extra_args = ['fstack-protector']
 extra_args = ['flto']
 add_project_link_arguments(['-lstdc++fs'], language : 'cpp')
-src = ['main.cpp','sample.cpp','collector.cpp','neighbor_manager.cpp','helpers.cpp']
+src = ['main.cpp','sample.cpp','collector.cpp','neighbor_manager.cpp','helpers.cpp','wpa_ctrl.c']
 eigen_dep = dependency('eigen3')
 thread_dep = dependency('threads')
 json_dep = dependency('nlohmann_json')
