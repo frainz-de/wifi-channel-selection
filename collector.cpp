@@ -91,29 +91,32 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
 
     auto tx_timestamp = timestamp;
     double prodsum = 0;
+    int interval = 0;
 
     for(auto vindex = txvector.begin(); vindex != txvector.end(); ++vindex) {
         tx_timestamp += std::chrono::milliseconds(1);
         double avg_rssi = 0;
-        int counter = 0;
+        int avgcounter = 0;
         //for(; (*findex)->timestamp < tx_timestamp; ++findex) {
         //TODO maybe correlate slightly earlier intervals
         while(findex != received_series.end() &&  (*findex)->timestamp < tx_timestamp) {
             avg_rssi += (*findex)->rssi;
-            ++counter;
+            ++avgcounter;
             ++findex;
             //assert((*findex));
             //assert(findex != received_series.end());
         }
-        avg_rssi /= (double) counter;
+        avg_rssi /= (double) avgcounter;
         auto prod = *vindex * avg_rssi;
-        if(counter) {
+        if(avgcounter) {
             prodsum += prod;
         }
+        interval++;
     }
     // TODO: use pearson correlation (normalize)
 
-    return prodsum;
+    auto e = prodsum / interval;
+    return e;
 }
 
 
