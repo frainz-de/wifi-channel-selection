@@ -70,6 +70,8 @@ nlohmann::json Collector::get_tx(size_t max_size) {
 }
 
 double Collector::correlate(const std::vector<double>& txvector, long timeint) {
+    // TODO this stuff is probably not thread safe
+    // std::vector is being written to by other thread
     if(received_series.size() == 0) {
         std::cerr << "\ncannot correlate without data\n";
         return nan("");
@@ -78,9 +80,8 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     auto rindex = received_series.rbegin();
     auto last = (*rindex)->timestamp;
 
-    for(; (*rindex)->timestamp > timestamp; ++rindex) {
-        //bool equal = (rindex == received_series.rbegin());
-    }
+    // search beginning of correlation interval
+    for(; (*rindex)->timestamp > timestamp; ++rindex);
 
     auto findex = rindex.base();
     assert (findex != received_series.begin());
@@ -90,8 +91,11 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     //auto fdistance = findex - received_series.begin();
 
     auto tx_timestamp = timestamp;
-    double prodsum = 0;
+    double rx_avg = 0;
+    double tx_avg = 0;
     int interval = 0;
+    auto rxindex = findex;
+    auto rxendindex = received_series.end();
 
     for(auto vindex = txvector.begin(); vindex != txvector.end(); ++vindex) {
         tx_timestamp += std::chrono::milliseconds(1);
@@ -99,21 +103,45 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
         int avgcounter = 0;
         //for(; (*findex)->timestamp < tx_timestamp; ++findex) {
         //TODO maybe correlate slightly earlier intervals
-        while(findex != received_series.end() &&  (*findex)->timestamp < tx_timestamp) {
-            avg_rssi += (*findex)->rssi;
+        while(rxindex != rxendindex &&  (*rxindex)->timestamp < tx_timestamp) {
+            avg_rssi += (*rxindex)->rssi;
             ++avgcounter;
-            ++findex;
+            ++rxindex;
             //assert((*findex));
             //assert(findex != received_series.end());
         }
         avg_rssi /= (double) avgcounter;
-        auto prod = *vindex * avg_rssi;
+        tx_avg += *vindex;
+        if(avgcounter) {
+            rx_avg += avg_rssi;
+        }
+        interval++;
+    }
+    // TODO: use pearson correlation (normalize)
+    rx_avg /= interval;
+    tx_avg /= interval;
+
+
+    double prodsum = 0;
+    rxindex = findex;
+    for(auto vindex = txvector.begin(); vindex != txvector.end(); ++vindex) {
+        tx_timestamp += std::chrono::milliseconds(1);
+        double avg_rssi = 0;
+        int avgcounter = 0;
+        while(rxindex != rxendindex &&  (*rxindex)->timestamp < tx_timestamp) {
+            avg_rssi += (*rxindex)->rssi;
+            ++avgcounter;
+            ++rxindex;
+            //assert((*findex));
+            //assert(findex != received_series.end());
+        }
+        avg_rssi /= (double) avgcounter;
+        auto prod = (*vindex-tx_avg) * (avg_rssi-rx_avg);
         if(avgcounter) {
             prodsum += prod;
         }
         interval++;
     }
-    // TODO: use pearson correlation (normalize)
 
     auto e = prodsum / interval;
     return e;
