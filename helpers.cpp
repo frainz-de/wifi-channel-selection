@@ -14,7 +14,7 @@ void rtrim(std::string &s) {
 
 // execute system command and return stdout as string
 std::string exec(const std::string cmd) {
-    std::array<char, 128> buffer;
+    std::array<char, 256> buffer;
     std::string result;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
     if (!pipe) {

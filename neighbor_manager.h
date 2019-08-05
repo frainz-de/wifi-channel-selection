@@ -13,7 +13,7 @@ class Collector;
 
 class NeighborManager {
 public:
-    NeighborManager(const std::string& interface);
+    NeighborManager(const std::string& specinterface, const std::string& netinterface);
     void run(volatile bool* running, int abortpipe);
     void scanandsend();
     void send_tx();
@@ -30,7 +30,8 @@ private:
 
     std::mutex send_lock;
 
-    std::string interface; 
+    std::string specinterface;
+    std::string netinterface;
     std::string own_address;
     int own_channel;
 

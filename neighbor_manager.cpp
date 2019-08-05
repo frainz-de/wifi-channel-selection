@@ -16,11 +16,15 @@
 #include <arpa/inet.h>
 #include <sys/poll.h>
 
-NeighborManager::NeighborManager(const std::string& interface) : interface(interface) {
+NeighborManager::NeighborManager(const std::string& specinterface, const std::string& netinterface)
+    : specinterface(specinterface), netinterface(netinterface) {
     //TODO get this from a config file
     std::string prefix("fd00::1"); // prefix to filter for addresses
     own_address = exec("ip a | grep -o '" + prefix + ".*/' | tr -d '/' | tr -d '\n'");
     own_channel = stoi(exec("iw dev wlp5s0 info | grep channel | awk '{print $3}' | tr -d '('"));
+
+    std::string exec_string("hostapd_cli -i " + netinterface + " status");
+    std::string status = exec(exec_string);
 }
 
 
@@ -44,7 +48,7 @@ void NeighborManager::scan() {
 
     std::cout << "\nstarting scan\n";
     std::string neighbor_string;
-    neighbor_string = exec("for i in $(iw dev " + interface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
+    neighbor_string = exec("for i in $(iw dev " + specinterface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
 
     // parse string with neighbor addresses into list
     std::set<std::string> neighbor_list;

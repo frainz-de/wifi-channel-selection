@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
     pipe(abortpipe);
 
     Collector collector(specinterface, netinterface);
-    NeighborManager neighbor_manager(specinterface);
+    NeighborManager neighbor_manager(specinterface, netinterface);
 
     collector.set_neighbor_manager(&neighbor_manager);
     neighbor_manager.set_collector(&collector);
