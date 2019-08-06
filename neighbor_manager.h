@@ -25,6 +25,7 @@ private:
     void scan();
     void send_neighbors();
     void send_msg(const std::string address, const std::string msg);
+    void switch_channel(int channel);
 
     Collector* collector;
 
@@ -32,8 +33,9 @@ private:
 
     std::string specinterface;
     std::string netinterface;
+    int specchannel;
+    int netchannel;
     std::string own_address;
-    int own_channel;
 
     //TODO make access to this thread safe
     std::set<std::string> neighbors;
@@ -41,4 +43,5 @@ private:
     std::set<std::string> neighbors_neighbors;
 
     std::map<std::string, int> channels;
+    std::map<std::string, double> correlations;
 };

@@ -21,7 +21,8 @@ NeighborManager::NeighborManager(const std::string& specinterface, const std::st
     //TODO get this from a config file
     std::string prefix("fd00::1"); // prefix to filter for addresses
     own_address = exec("ip a | grep -o '" + prefix + ".*/' | tr -d '/' | tr -d '\n'");
-    own_channel = stoi(exec("iw dev wlp5s0 info | grep channel | awk '{print $3}' | tr -d '('"));
+    specchannel = stoi(exec("iw dev " + specinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
+    netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
 
     std::string exec_string("hostapd_cli -i " + netinterface + " status");
     std::string status = exec(exec_string);
@@ -100,7 +101,7 @@ void NeighborManager::send_neighbors() {
     nlohmann::json neighbor_msg;
     //nlohmann::json self;
     neighbor_msg["self"]["address"] = own_address;
-    neighbor_msg["self"]["channel"] = own_channel;
+    neighbor_msg["self"]["channel"] = netchannel;
     nlohmann::json neighbor_json(neighbors);
     neighbor_msg["neighbors"] = neighbor_json;
 
@@ -115,7 +116,7 @@ void NeighborManager::send_neighbors() {
 void NeighborManager::send_tx() {
     nlohmann::json msg;
     msg["self"]["address"] = own_address;
-    msg["self"]["channel"] = own_channel;
+    msg["self"]["channel"] = netchannel;
     auto txmsg = collector->get_tx(1500);
     msg["txmsg"] = txmsg;
     auto dump = msg.dump();
@@ -123,6 +124,11 @@ void NeighborManager::send_tx() {
     for(auto i = neighbors_neighbors.begin(); i != neighbors_neighbors.end(); i++) {
        send_msg(std::string(*i), dump);
     }
+}
+
+
+void NeighborManager::switch_channel(int channel) {
+    std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 3 " + std::to_string(channel));
 }
 
 void NeighborManager::run(volatile bool* running, int abortpipe) {
@@ -219,16 +225,17 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
         }
 
         if(msg_json.find("txmsg") != msg_json.end()) {
-            auto channel = msg_json.at("self").at("channel");
-            //if(msg_json["self"]["channel"] == own_channel) {
+            int channel = msg_json.at("self").at("channel");
+            if(channel == netchannel) {
             //TODO put back in, only this is only for debugging
-            {
+            //{
                 auto txdata = msg_json["txmsg"]["txdata"];
                 std::vector<long> txvector;
                 txdata.get_to(txvector);
                 auto timestamp = msg_json["txmsg"]["timestamp"];
                 assert (txdata.size() == txvector.size());
                 auto correlation = collector->correlate(txdata, timestamp);
+                correlations[msg_json.at("self").at("address")] = correlation;
                 std::cout << ("\n correlation: " + std::to_string(correlation) + "\n");
             }
         }
