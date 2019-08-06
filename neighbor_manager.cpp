@@ -131,6 +131,77 @@ void NeighborManager::switch_channel(int channel) {
     std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 3 " + std::to_string(channel));
 }
 
+
+void NeighborManager::receive_message(int sockfd) {
+    std::vector<char> buffer(65535);
+    sockaddr src_addr;
+    socklen_t addrlen = sizeof(src_addr);
+
+    size_t received_bytes = recvfrom(sockfd, (char *)buffer.data(), buffer.size(),
+            MSG_WAITALL | MSG_TRUNC, &src_addr, &addrlen);
+    if (received_bytes <= 0) {
+        throw std::runtime_error("receiving failed");
+    }
+    if (received_bytes > buffer.size()) {
+        throw std::runtime_error("receive buffer too small");
+    }
+
+    // try to get receiver address, gives back garbage
+    char src_addr_c[INET6_ADDRSTRLEN];
+    std::vector<char> src_addr_b(50);
+    inet_ntop(src_addr.sa_family, &src_addr.sa_data, src_addr_c, 50);
+    //inet_ntop(src_addr.sa_family, src_addr.sa_data, src_addr_b.data(), 50);
+    inet_ntop(src_addr.sa_family, &src_addr.sa_data, src_addr_b.data(), 50);
+
+
+    std::string msg(buffer.begin(), std::next(buffer.begin(), received_bytes));
+
+    std::cerr << "\nreceived msg: " << msg << std::endl;
+
+    //TODO: catch parse errors
+    nlohmann::json msg_json = nlohmann::json::parse(msg);
+
+
+    if(msg_json.find("neighbors") != msg_json.end()) {
+        auto received_neighbors = msg_json["neighbors"];
+
+        std::stringstream output;
+        output << "\nreceived neighbors: ";
+        for(nlohmann::json::iterator i = received_neighbors.begin(); i!=received_neighbors.end(); i++) {
+            output << *i << ", ";
+            if (*i != own_address) {
+                neighbors_neighbors.insert(i->get<std::string>());
+            }
+        }
+        output << std::endl;
+        std::cout << output.str();
+    }
+
+    if(msg_json.find("self") != msg_json.end()) {
+        channels[msg_json["self"]["address"]] = msg_json["self"]["channel"];
+        std::cout << "\nnoting channel " << msg_json["self"]["channel"]
+            << " to " << msg_json["self"]["address"] << std::endl;
+    }
+
+    if(msg_json.find("txmsg") != msg_json.end()) {
+        int channel = msg_json.at("self").at("channel");
+        if(channel == netchannel) {
+        //TODO put back in, only this is only for debugging
+        //{
+            auto txdata = msg_json["txmsg"]["txdata"];
+            std::vector<long> txvector;
+            txdata.get_to(txvector);
+            auto timestamp = msg_json["txmsg"]["timestamp"];
+            assert (txdata.size() == txvector.size());
+            auto correlation = collector->correlate(txdata, timestamp);
+            correlations[msg_json.at("self").at("address")] = correlation;
+            std::cout << ("\n correlation: " + std::to_string(correlation) + "\n");
+        }
+    }
+
+}
+
+
 void NeighborManager::run(volatile bool* running, int abortpipe) {
 
     // get neighbors regularly, not working yet
@@ -153,7 +224,6 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
     // maybe use std::future for scanning
     int sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
     //char buffer[1500] = {};
-    std::vector<char> buffer(65535);
 
     struct sockaddr_in6 neighbor_addr = {};
     neighbor_addr.sin6_family = AF_INET6;
@@ -162,83 +232,21 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
     bind(sockfd, (const struct sockaddr *) &neighbor_addr, sizeof(neighbor_addr));
 
     struct pollfd pfds[2];
-    pfds[0].fd = abortpipe; 
+    pfds[0].fd = abortpipe;
     pfds[0].events = POLLIN;
     pfds[1].fd = sockfd;
     pfds[1].events = POLLIN;
 
 
     while (*running) {
-        std::fill(buffer.begin(), buffer.end(), 0);
+        //std::fill(buffer.begin(), buffer.end(), 0);
         poll(pfds, 2, -1);
         if(pfds[1].revents != POLLIN) {
             continue;
         }
 
-        sockaddr src_addr;
-        socklen_t addrlen = sizeof(src_addr);
+        receive_message(sockfd);
 
-        size_t received_bytes = recvfrom(sockfd, (char *)buffer.data(), buffer.size(),
-                MSG_WAITALL | MSG_TRUNC, &src_addr, &addrlen);
-        if (received_bytes <= 0) {
-            throw std::runtime_error("receiving failed");
-        }
-        if (received_bytes > buffer.size()) {
-            throw std::runtime_error("receive buffer too small");
-        }
-
-        // try to get receiver address, gives back garbage
-        char src_addr_c[INET6_ADDRSTRLEN];
-        std::vector<char> src_addr_b(50);
-        inet_ntop(src_addr.sa_family, &src_addr.sa_data, src_addr_c, 50);
-        //inet_ntop(src_addr.sa_family, src_addr.sa_data, src_addr_b.data(), 50);
-        inet_ntop(src_addr.sa_family, &src_addr.sa_data, src_addr_b.data(), 50);
-
-
-        std::string msg(buffer.begin(), std::next(buffer.begin(), received_bytes));
-
-        std::cerr << "\nreceived msg: " << msg << std::endl;
-
-        //TODO: catch parse errors
-        nlohmann::json msg_json = nlohmann::json::parse(msg);
-
-
-        if(msg_json.find("neighbors") != msg_json.end()) {
-            auto received_neighbors = msg_json["neighbors"];
-
-            std::stringstream output;
-            output << "\nreceived neighbors: ";
-            for(nlohmann::json::iterator i = received_neighbors.begin(); i!=received_neighbors.end(); i++) {
-                output << *i << ", ";
-                if (*i != own_address) {
-                    neighbors_neighbors.insert(i->get<std::string>());
-                }
-            }
-            output << std::endl;
-            std::cout << output.str();
-        }
-
-        if(msg_json.find("self") != msg_json.end()) {
-            channels[msg_json["self"]["address"]] = msg_json["self"]["channel"];
-            std::cout << "\nnoting channel " << msg_json["self"]["channel"]
-                << " to " << msg_json["self"]["address"] << std::endl;
-        }
-
-        if(msg_json.find("txmsg") != msg_json.end()) {
-            int channel = msg_json.at("self").at("channel");
-            if(channel == netchannel) {
-            //TODO put back in, only this is only for debugging
-            //{
-                auto txdata = msg_json["txmsg"]["txdata"];
-                std::vector<long> txvector;
-                txdata.get_to(txvector);
-                auto timestamp = msg_json["txmsg"]["timestamp"];
-                assert (txdata.size() == txvector.size());
-                auto correlation = collector->correlate(txdata, timestamp);
-                correlations[msg_json.at("self").at("address")] = correlation;
-                std::cout << ("\n correlation: " + std::to_string(correlation) + "\n");
-            }
-        }
     }
 
 }
