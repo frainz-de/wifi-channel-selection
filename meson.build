@@ -3,7 +3,7 @@ project('collector', ['cpp','c'],
 #extra_args = ['fstack-protector']
 extra_args = ['flto']
 add_project_link_arguments(['-lstdc++fs'], language : 'cpp')
-src = ['main.cpp','sample.cpp','collector.cpp','neighbor_manager.cpp','helpers.cpp','wpa_ctrl.c']
+src = ['main.cpp','sample.cpp','collector.cpp','neighbor_manager.cpp','helpers.cpp','channel_strategy.cpp','wpa_ctrl.c']
 eigen_dep = dependency('eigen3')
 thread_dep = dependency('threads')
 json_dep = dependency('nlohmann_json')

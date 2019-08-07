@@ -10,6 +10,7 @@
 #include <nlohmann/json.hpp>
 
 class Collector;
+class ChannelStrategy;
 
 class NeighborManager {
 public:
@@ -29,6 +30,7 @@ private:
     void receive_message(int sockfd);
 
     Collector* collector;
+    ChannelStrategy* channel_strategy;
 
     std::mutex send_lock;
 

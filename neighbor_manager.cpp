@@ -2,6 +2,7 @@
 #include "helpers.h"
 #include "collector.h"
 #include "wpa_ctrl.h"
+#include "channel_strategy.h"
 
 #include <nlohmann/json.hpp>
 #include <iostream>
@@ -15,6 +16,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/poll.h>
+#include <sys/timerfd.h>
+#include <unistd.h>
 
 NeighborManager::NeighborManager(const std::string& specinterface, const std::string& netinterface)
     : specinterface(specinterface), netinterface(netinterface) {
@@ -24,6 +27,9 @@ NeighborManager::NeighborManager(const std::string& specinterface, const std::st
     specchannel = stoi(exec("iw dev " + specinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
     netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
 
+    channel_strategy = new RandomChannelStrategy(specinterface, netinterface);
+
+    //TODO remove temp stuff
     std::string exec_string("hostapd_cli -i " + netinterface + " status");
     std::string status = exec(exec_string);
 }
@@ -231,21 +237,29 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
     neighbor_addr.sin6_addr = in6addr_any;
     bind(sockfd, (const struct sockaddr *) &neighbor_addr, sizeof(neighbor_addr));
 
-    struct pollfd pfds[2];
+    int timerfd = timerfd_create(CLOCK_REALTIME, 0);
+    itimerspec spec = {{.tv_sec=1}, {.tv_sec=1}};
+    timerfd_settime(timerfd, 0, &spec, 0);
+
+    struct pollfd pfds[3];
     pfds[0].fd = abortpipe;
     pfds[0].events = POLLIN;
     pfds[1].fd = sockfd;
     pfds[1].events = POLLIN;
-
+    pfds[2].fd = timerfd;
+    pfds[2].events = POLLIN;
 
     while (*running) {
         //std::fill(buffer.begin(), buffer.end(), 0);
         poll(pfds, 2, -1);
-        if(pfds[1].revents != POLLIN) {
-            continue;
+        if(pfds[1].revents & POLLIN) {
+            receive_message(sockfd);
         }
-
-        receive_message(sockfd);
+        if(pfds[2].revents & POLLIN) {
+            std::cout << "\ntimer fired\n";
+            int timersElapsed = 0;
+            read(pfds[2].fd, &timersElapsed, 8);
+        }
 
     }
 
