@@ -1,11 +1,13 @@
 #pragma once
 
 //#include "neighbor_manager.h"
+#include "sample.h"
 
 #include <string>
 #include <fstream>
 #include <vector>
-#include "sample.h"
+#include <list>
+#include <queue>
 #include <chrono>
 #include <tuple>
 #include <thread>
@@ -16,17 +18,6 @@ using TxDataPoint = std::tuple<std::chrono::milliseconds, long>; // timestamp, v
 class NeighborManager;
 
 class Collector {
-public:
-    Collector(std::string& specinterface, std::string& netinterface);
-    void run(volatile bool* running);
-
-    std::thread start_thread(volatile bool* running);
-    void readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series);
-    void set_neighbor_manager(NeighborManager* neighbor_manager);
-
-    nlohmann::json get_tx(size_t max_size);
-    double correlate(const std::vector<double>& txvector, long timeint);
-
 private:
     void seek_to_header();
 
@@ -40,9 +31,26 @@ private:
     std::ifstream scanfile;
     std::ifstream txfile;
 
-    std::vector<Sample*> received_series;
+    //TODO make both lists (+required changes) to not invalidate iterators
+    //std::vector<Sample*> received_series;
+    std::list<Sample*> received_series;
+    //std::deque<Sample*> received_series;
     std::vector<TxDataPoint> tx_series;
+    //std::deque<TxDataPoint> tx_series;
+    //std::list<TxDataPoint> tx_series;
+
     long last_tx_bytes;
     int sample_count = 0;
     float avg_rssi = 0;
+
+public:
+    Collector(std::string& specinterface, std::string& netinterface);
+    void run(volatile bool* running);
+
+    std::thread start_thread(volatile bool* running);
+    void readSample(std::ifstream &scanfile, decltype(received_series) &received_series);
+    void set_neighbor_manager(NeighborManager* neighbor_manager);
+
+    nlohmann::json get_tx(size_t max_size);
+    double correlate(const std::vector<double>& txvector, long timeint);
 };

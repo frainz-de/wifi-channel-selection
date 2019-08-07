@@ -174,8 +174,10 @@ void Collector::run(volatile bool* running) {
 
         //TODO running average of rssi
         if(sample_count > 1) {
-            auto& previous = received_series.at(received_series.size()-2);
-            auto& current = received_series.at(received_series.size()-1);
+            //auto& previous = received_series.at(received_series.size()-2);
+            auto& previous = *std::prev(received_series.end(), 2);
+            //auto& current = received_series.at(received_series.size()-1);
+            auto& current = received_series.back();
             auto delta_t = current->timestamp - previous->timestamp;
             std::chrono::milliseconds tau(1000);
             //double alpha = delta_t / tau;
@@ -268,7 +270,7 @@ void Collector::run(volatile bool* running) {
 }
 
 // read a sample from proc, convert it to an object and store it in a vector
-void Collector::readSample(std::ifstream &scanfile, std::vector<Sample*> &received_series) {
+void Collector::readSample(std::ifstream &scanfile, decltype(received_series) &received_series) {
 
     scanfile.peek(); // check for EOF
     if(scanfile.eof()) {
