@@ -143,12 +143,13 @@ void NeighborManager::receive_message(int sockfd) {
     sockaddr src_addr;
     socklen_t addrlen = sizeof(src_addr);
 
-    size_t received_bytes = recvfrom(sockfd, (char *)buffer.data(), buffer.size(),
+    auto received_bytes = recvfrom(sockfd, (char *)buffer.data(), buffer.size(),
             MSG_WAITALL | MSG_TRUNC, &src_addr, &addrlen);
     if (received_bytes <= 0) {
-        throw std::runtime_error("receiving failed");
+        //auto err = std::strerror(errno);
+        throw std::runtime_error(std::string("receiving failed: ") + std::strerror(errno));
     }
-    if (received_bytes > buffer.size()) {
+    if (received_bytes > signed(buffer.size())) {
         throw std::runtime_error("receive buffer too small");
     }
 
@@ -256,7 +257,8 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
         //std::fill(buffer.begin(), buffer.end(), 0);
         poll(pfds, 3, -1);
         if(pfds[1].revents & POLLIN) {
-            receive_message(sockfd);
+            // use fd in pfds, because sockfd is miraculously set to zero at some point
+            receive_message(pfds[1].fd);
         }
         if(pfds[2].revents & POLLIN) {
             int timersElapsed = 0;
