@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 #include <random>
+#include <iostream>
 
 
 ChannelStrategy::ChannelStrategy(const std::string& specinterface, const std::string& netinterface):
@@ -22,6 +23,11 @@ void RandomChannelStrategy::do_something() {
     std::uniform_int_distribution<int> dist(0, possible_channels.size() - 1);
 
     int channel = possible_channels[dist(engine)];
-    std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 5 " + std::to_string(channel));
+    std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 1 " + std::to_string(channel));
+    if (res != "OK\n") {
+        std::cerr << "\n\033[31mfailed to set channel to " << std::to_string(channel) << ": " << res << "\033[0m";
+    } else {
+        std::cout << "\n\033[32msuccessfully set channel to " << std::to_string(channel) << "\033[0m\n";
+    }
 
 }
