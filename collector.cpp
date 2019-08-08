@@ -58,12 +58,20 @@ nlohmann::json Collector::get_tx(size_t max_size) {
     auto begin_time = current_time - std::chrono::seconds(1);
     nlohmann::json txmsg;
     auto txdata = nlohmann::json::array();
-    //int i = tx_series.size()-1;
-    for (auto i = tx_series.size()-max_size; i < tx_series.size(); i++) {
+
+    //for (auto i = tx_series.size()-max_size; i < tx_series.size(); i++) {
+    ////while(json.get_ref<std::string&>().size() < max_size) {
+    //    txdata.push_back(std::get<1>(tx_series.at(i)));
+    //    //i--;
+    //}
+
+    for (auto i = std::prev(tx_series.end(), max_size); i != tx_series.end(); i++) {
     //while(json.get_ref<std::string&>().size() < max_size) {
-        txdata.push_back(std::get<1>(tx_series.at(i)));
+        txdata.push_back(std::get<1>(*i));
         //i--;
     }
+
+
     txmsg["txdata"] = txdata;
     txmsg["timestamp"] = current_time.count();
     return txmsg;
@@ -233,6 +241,7 @@ void Collector::run(volatile bool* running) {
     }
 
     // write last second into json
+    /*
     auto now = std::chrono::high_resolution_clock::now();
     auto current_time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
     auto begin_time = current_time - std::chrono::seconds(1);
@@ -245,10 +254,11 @@ void Collector::run(volatile bool* running) {
     }
     auto dump = json.dump();
     auto ubjson = nlohmann::json::to_ubjson(json);
-    std::cout << ubjson.size() << std::endl;
-    auto back = nlohmann::json::from_ubjson(ubjson);
-    auto backdump = back.dump();
+    //std::cout << ubjson.size() << std::endl;
+    //auto back = nlohmann::json::from_ubjson(ubjson);
+    //auto backdump = back.dump();
     //neighbor_manager->send_tx(json);
+    */
 
 
 

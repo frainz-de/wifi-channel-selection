@@ -35,9 +35,9 @@ private:
     //std::vector<Sample*> received_series;
     std::list<Sample*> received_series;
     //std::deque<Sample*> received_series;
-    std::vector<TxDataPoint> tx_series;
+    //std::vector<TxDataPoint> tx_series;
     //std::deque<TxDataPoint> tx_series;
-    //std::list<TxDataPoint> tx_series;
+    std::list<TxDataPoint> tx_series;
 
     long last_tx_bytes;
     int sample_count = 0;
