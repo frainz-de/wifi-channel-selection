@@ -22,6 +22,8 @@ protected:
     int specchannel;
     int netchannel;
 
+    void switch_channel(int channel);
+
 private:
 };
 
