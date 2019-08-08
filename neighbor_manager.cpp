@@ -239,7 +239,7 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
 
     int timerfd = timerfd_create(CLOCK_REALTIME, 0);
     itimerspec spec = {{.tv_sec=1}, {.tv_sec=1}};
-    timerfd_settime(timerfd, 0, &spec, 0);
+    assert(timerfd_settime(timerfd, 0, &spec, 0) >= 0);
 
     struct pollfd pfds[3];
     pfds[0].fd = abortpipe;
@@ -249,16 +249,21 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
     pfds[2].fd = timerfd;
     pfds[2].events = POLLIN;
 
+    //itimerspec time = {};
+    //timerfd_gettime(timerfd, &time);
+
     while (*running) {
         //std::fill(buffer.begin(), buffer.end(), 0);
-        poll(pfds, 2, -1);
+        poll(pfds, 3, -1);
         if(pfds[1].revents & POLLIN) {
             receive_message(sockfd);
         }
         if(pfds[2].revents & POLLIN) {
-            std::cout << "\ntimer fired\n";
             int timersElapsed = 0;
             read(pfds[2].fd, &timersElapsed, 8);
+
+            channel_strategy->do_something();
+            //std::cout << "\ntimer fired\n";
         }
 
     }
