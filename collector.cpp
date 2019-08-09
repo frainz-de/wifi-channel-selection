@@ -84,7 +84,7 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
         std::cerr << "\ncannot correlate without data\n";
         return nan("");
     }
-    auto timestamp = std::chrono::milliseconds(timeint);
+    auto timestamp = std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(timeint));
     auto rindex = received_series.rbegin();
     auto last = (*rindex)->timestamp;
 

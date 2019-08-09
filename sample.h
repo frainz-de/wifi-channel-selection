@@ -9,7 +9,7 @@ class Sample {
     ~Sample();
     void output(std::ostream &stream);
 
-    std::chrono::milliseconds timestamp;
+    std::chrono::time_point<std::chrono::high_resolution_clock> timestamp;
     float center_freq;
     uint8_t rssi;
     uint8_t* data;
