@@ -11,6 +11,7 @@
 #include <chrono>
 #include <tuple>
 #include <thread>
+#include <mutex>
 #include <nlohmann/json.hpp>
 
 using DataPoint = std::tuple<int, double>;
@@ -30,6 +31,10 @@ private:
     std::string scanpath;
     std::ifstream scanfile;
     std::ifstream txfile;
+    // diagnostics data files
+    std::ofstream outputscanfile = std::ofstream("specdata.csv");
+    std::ofstream outputtxfile = std::ofstream("txdata.csv");
+    std::mutex file_lock;
 
     //TODO make both lists (+required changes) to not invalidate iterators
     //std::vector<Sample*> received_series;

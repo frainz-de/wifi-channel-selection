@@ -160,13 +160,18 @@ void Collector::truncate(std::chrono::milliseconds time) {
     std::chrono::time_point<std::chrono::high_resolution_clock> cuttime =
         std::chrono::high_resolution_clock::now() - time;
 
+    std::lock_guard<std::mutex> guard(file_lock);
+
     for (auto i = received_series.begin(); (*i)->timestamp < cuttime;) {
         delete *i;
         received_series.erase(i++);
+        (*i)->output(outputscanfile);
     }
 
     for (auto i = tx_series.begin(); std::get<0>(*i) < cuttime;) {
         tx_series.erase(i++);
+        outputtxfile << std::chrono::duration_cast<std::chrono::milliseconds>(std::get<0>(*i).time_since_epoch()).count()
+            << ";" << std::get<1>(*i) << ";\n";
     }
 }
 
@@ -278,15 +283,15 @@ void Collector::run(volatile bool* running) {
 
     std::cout << "\ncaught SIGINT, writing data to disc\n";
 
+    std::lock_guard<std::mutex> guard(file_lock);
+
     // output scan data
-    std::ofstream outputscanfile("specdata.csv");
     for (auto const& sample: received_series) {
         sample->output(outputscanfile);
     }
     outputscanfile.close();
 
     // output tx data
-    std::ofstream outputtxfile("txdata.csv");
     for (auto const& datapoint: tx_series) {
         outputtxfile << std::chrono::duration_cast<std::chrono::milliseconds>(std::get<0>(datapoint).time_since_epoch()).count()
             << ";" << std::get<1>(datapoint) << ";\n";
