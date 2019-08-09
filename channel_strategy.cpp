@@ -5,10 +5,15 @@
 #include <thread>
 #include <random>
 #include <iostream>
+#include <cassert>
 
 
 ChannelStrategy::ChannelStrategy(const std::string& specinterface, const std::string& netinterface):
-    specinterface(specinterface), netinterface(netinterface) {};
+    specinterface(specinterface), netinterface(netinterface) {
+
+    specchannel = stoi(exec("iw dev " + specinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
+    netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
+    };
 
 void ChannelStrategy::switch_channel(int channel) {
     std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 1 " + std::to_string(channel));
@@ -16,9 +21,14 @@ void ChannelStrategy::switch_channel(int channel) {
         std::cerr << "\n\033[31mfailed to set channel to " + std::to_string(channel) + ": " + res + "\033[0m";
     } else {
         std::cout << "\n\033[32msuccessfully set channel to " + std::to_string(channel) + "\033[0m\n";
+        netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
+        assert(netchannel == channel);
+
     }
 
 }
+int ChannelStrategy::get_specchannel() {return specchannel;}
+int ChannelStrategy::get_netchannel() {return netchannel;}
 
 void RandomChannelStrategy::do_something() {
     std::chrono::time_point now = std::chrono::system_clock::now();

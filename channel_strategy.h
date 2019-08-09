@@ -13,6 +13,8 @@ public:
     virtual ~ChannelStrategy() {};
     //virtual void run(volatile bool* running);
     virtual void do_something() = 0;
+    int get_specchannel();
+    int get_netchannel();
 
 protected:
     //std::vector<int> possible_channels = {5170,5190,5230,5270,5310,5510,5550,5590,5630,5670,5710,5755,5795};
@@ -25,6 +27,10 @@ protected:
     void switch_channel(int channel);
 
 private:
+};
+
+class CorrelationChannelStrategy: public ChannelStrategy {
+
 };
 
 class RandomChannelStrategy: public ChannelStrategy {

@@ -36,8 +36,6 @@ private:
 
     std::string specinterface;
     std::string netinterface;
-    int specchannel;
-    int netchannel;
     std::string own_address;
 
     //TODO make access to this thread safe

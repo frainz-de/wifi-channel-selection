@@ -24,8 +24,6 @@ NeighborManager::NeighborManager(const std::string& specinterface, const std::st
     //TODO get this from a config file
     std::string prefix("fd00::1"); // prefix to filter for addresses
     own_address = exec("ip a | grep -o '" + prefix + ".*/' | tr -d '/' | tr -d '\n'");
-    specchannel = stoi(exec("iw dev " + specinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
-    netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
 
     channel_strategy = new RandomChannelStrategy(specinterface, netinterface);
 
@@ -107,7 +105,8 @@ void NeighborManager::send_neighbors() {
     nlohmann::json neighbor_msg;
     //nlohmann::json self;
     neighbor_msg["self"]["address"] = own_address;
-    neighbor_msg["self"]["channel"] = netchannel;
+    //neighbor_msg["self"]["channel"] = netchannel;
+    neighbor_msg["self"]["channel"] = channel_strategy->get_netchannel();
     nlohmann::json neighbor_json(neighbors);
     neighbor_msg["neighbors"] = neighbor_json;
 
@@ -122,7 +121,7 @@ void NeighborManager::send_neighbors() {
 void NeighborManager::send_tx() {
     nlohmann::json msg;
     msg["self"]["address"] = own_address;
-    msg["self"]["channel"] = netchannel;
+    msg["self"]["channel"] = channel_strategy->get_netchannel();
     auto txmsg = collector->get_tx(1500);
     msg["txmsg"] = txmsg;
     auto dump = msg.dump();
@@ -192,7 +191,7 @@ void NeighborManager::receive_message(int sockfd) {
 
     if(msg_json.find("txmsg") != msg_json.end()) {
         int channel = msg_json.at("self").at("channel");
-        if(channel == netchannel) {
+        if(channel == channel_strategy->get_netchannel()) {
         //TODO put back in, only this is only for debugging
         //{
             auto txdata = msg_json["txmsg"]["txdata"];
