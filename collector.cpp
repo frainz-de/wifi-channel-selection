@@ -155,6 +155,20 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     return e;
 }
 
+// delete everything in the data series exept for the interval given by time
+void Collector::truncate(std::chrono::milliseconds time) {
+    std::chrono::time_point<std::chrono::high_resolution_clock> cuttime =
+        std::chrono::high_resolution_clock::now() - time;
+
+    for (auto i = received_series.begin(); (*i)->timestamp < cuttime;) {
+        delete *i;
+        received_series.erase(i++);
+    }
+
+    for (auto i = tx_series.begin(); std::get<0>(*i) < cuttime;) {
+        tx_series.erase(i++);
+    }
+}
 
 //remove characters until valid header is found
 void Collector::seek_to_header() {
@@ -274,7 +288,8 @@ void Collector::run(volatile bool* running) {
     // output tx data
     std::ofstream outputtxfile("txdata.csv");
     for (auto const& datapoint: tx_series) {
-        outputtxfile << std::get<0>(datapoint).count() << ";" << std::get<1>(datapoint) << ";\n";
+        outputtxfile << std::chrono::duration_cast<std::chrono::milliseconds>(std::get<0>(datapoint).time_since_epoch()).count()
+            << ";" << std::get<1>(datapoint) << ";\n";
     }
     std::cout << "finished writing, exiting\n";
 }

@@ -9,9 +9,6 @@
 #include <tclap/CmdLine.h>
 //#include <Eigen/Dense>
 
-using DataPoint = std::tuple<int, double>;
-using TxDataPoint = std::tuple<std::chrono::milliseconds, long>;
-
 
 // global variable to exit main loop gracefully
 volatile bool running = true;

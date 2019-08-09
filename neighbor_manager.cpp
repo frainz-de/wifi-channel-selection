@@ -266,6 +266,9 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
 
             channel_strategy->do_something();
             //std::cout << "\ntimer fired\n";
+
+            collector->truncate(std::chrono::seconds(20));
+            //TODO: write to files while or before truncating
         }
 
     }

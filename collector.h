@@ -14,7 +14,7 @@
 #include <nlohmann/json.hpp>
 
 using DataPoint = std::tuple<int, double>;
-using TxDataPoint = std::tuple<std::chrono::milliseconds, long>; // timestamp, value
+using TxDataPoint = std::tuple<std::chrono::time_point<std::chrono::high_resolution_clock>, long>; // timestamp, value
 class NeighborManager;
 
 class Collector {
@@ -53,4 +53,6 @@ public:
 
     nlohmann::json get_tx(size_t max_size);
     double correlate(const std::vector<double>& txvector, long timeint);
+
+    void truncate(std::chrono::milliseconds time);
 };
