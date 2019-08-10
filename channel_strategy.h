@@ -35,6 +35,9 @@ private:
 };
 
 class CorrelationChannelStrategy: public ChannelStrategy {
+public:
+    using ChannelStrategy::ChannelStrategy; // inherit constructors from base class
+    virtual void do_something();
 
 };
 

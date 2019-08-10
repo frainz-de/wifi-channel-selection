@@ -37,6 +37,19 @@ void ChannelStrategy::save_correlation(std::string address, double correlation,
 int ChannelStrategy::get_specchannel() {return specchannel;}
 int ChannelStrategy::get_netchannel() {return netchannel;}
 
+
+void CorrelationChannelStrategy::do_something() {
+   // get neighbor with oldest / no correlation and change spec channel accordingly
+    std::pair<std::string, std::tuple<double, std::chrono::time_point<Clock>>> oldest
+        = {"", {0, std::chrono::time_point<Clock>::max()}};
+
+    for (auto i = correlations.begin(); i != correlations.end(); i++) {
+        if (std::get<1>(i->second) <= std::get<1>(oldest.second)) {
+            oldest = *i;
+        }
+    }
+}
+
 void RandomChannelStrategy::do_something() {
     std::chrono::time_point now = std::chrono::system_clock::now();
     if (now - last_checked < std::chrono::seconds(5)) {
