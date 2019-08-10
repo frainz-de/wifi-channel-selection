@@ -23,10 +23,17 @@ void ChannelStrategy::switch_channel(int channel) {
         std::cout << "\n\033[32msuccessfully set channel to " + std::to_string(channel) + "\033[0m\n";
         netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
         assert(netchannel == channel);
-
     }
-
 }
+
+void ChannelStrategy::save_correlation(std::string address, double correlation,
+        std::chrono::time_point<Clock> timestamp) {
+
+    //correlations[address] = {correlation, timestamp};
+    correlations.insert({address, {correlation, timestamp}});
+    std::cout << "\nnoting correlation " + std::to_string(correlation) + " for neighbor " + address + "\n";
+}
+
 int ChannelStrategy::get_specchannel() {return specchannel;}
 int ChannelStrategy::get_netchannel() {return netchannel;}
 

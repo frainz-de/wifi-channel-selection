@@ -3,8 +3,10 @@
 #include <string>
 #include <chrono>
 #include <vector>
+#include <map>
+#include <tuple>
 
-using Clock = std::chrono::system_clock;
+using Clock = std::chrono::high_resolution_clock;
 
 class ChannelStrategy {
 public:
@@ -15,6 +17,7 @@ public:
     virtual void do_something() = 0;
     int get_specchannel();
     int get_netchannel();
+    void save_correlation(std::string address, double correlation, std::chrono::time_point<Clock> timestamp);
 
 protected:
     //std::vector<int> possible_channels = {5170,5190,5230,5270,5310,5510,5550,5590,5630,5670,5710,5755,5795};
@@ -26,6 +29,8 @@ protected:
 
     void switch_channel(int channel);
 
+    // map of address and tuple of correlation and timestamp
+    std::map<std::string, std::tuple<double, std::chrono::time_point<Clock>>> correlations;
 private:
 };
 

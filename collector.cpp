@@ -309,8 +309,6 @@ void Collector::readSample(std::ifstream &scanfile, decltype(received_series) &r
 
     auto sample = new fft_sample_ath10k;
     scanfile.read((char*)&sample->tlv, sizeof(fft_sample_tlv)); //read TLV header
-//    std::cout << "type: " << unsigned(sample->tlv.type) << std::endl;
-//    std::cout << "length: " << be16toh(sample->tlv.length) << std::endl;
     if(sample->tlv.type != ATH_FFT_SAMPLE_ATH10K) {
         //throw std::runtime_error("Wrong sample type, only ath10k samples are supportet atm\n");
         seek_to_header();
