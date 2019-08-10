@@ -161,7 +161,13 @@ void NeighborManager::receive_message(int sockfd) {
     std::cerr << "\nreceived msg from " << src_addr_s << ": " << msg << std::endl;
 
     //TODO: catch parse errors
-    nlohmann::json msg_json = nlohmann::json::parse(msg);
+    nlohmann::json msg_json;
+    try {
+        msg_json = nlohmann::json::parse(msg);
+    } catch (nlohmann::detail::parse_error& e) {
+        std::cerr << "\n\033[31mfailed to parse message, ignoring\033[0m\n";
+        return;
+    }
 
 
     if(msg_json.find("neighbors") != msg_json.end()) {
