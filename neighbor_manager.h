@@ -11,10 +11,12 @@
 
 class Collector;
 class ChannelStrategy;
+//enum StrategyType {RANDOM, CORRELATION};
 
 class NeighborManager {
 public:
-    NeighborManager(const std::string& specinterface, const std::string& netinterface);
+    NeighborManager(const std::string& specinterface, const std::string& netinterface,
+            const std::string& strategytype);
     void run(volatile bool* running, int abortpipe);
     void scanandsend();
     void send_tx();

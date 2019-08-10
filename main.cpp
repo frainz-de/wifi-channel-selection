@@ -30,6 +30,8 @@ int main(int argc, char* argv[]) {
     std::string txpath;
     std::string scanpath;
     int freq = 0;
+    //StrategyType strategytype;
+    std::string strategytype;
 
     // proper command line parsing
     try {
@@ -40,12 +42,15 @@ int main(int argc, char* argv[]) {
                 "Interface to use for networking", false, "wlp5s0", "interface name", cmd);
         TCLAP::ValueArg<int> freq_arg("f", "frequency",
                 "Frequency to scan at", false, 0, "freq", cmd);
+        TCLAP::ValueArg<std::string> strategy_arg("c", "channelstrategy",
+                "Channel selection strategy to use", false, "correlation", "strategy type", cmd);
 
         cmd.parse(argc, argv);
 
         specinterface = specinterface_arg.getValue();
         netinterface = netinterface_arg.getValue();
         freq = freq_arg.getValue();
+        strategytype = strategy_arg.getValue();
 
     } catch (TCLAP::ArgException &e) {
         std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
@@ -62,7 +67,7 @@ int main(int argc, char* argv[]) {
     pipe(abortpipe);
 
     Collector collector(specinterface, netinterface);
-    NeighborManager neighbor_manager(specinterface, netinterface);
+    NeighborManager neighbor_manager(specinterface, netinterface, strategytype);
 
     collector.set_neighbor_manager(&neighbor_manager);
     neighbor_manager.set_collector(&collector);

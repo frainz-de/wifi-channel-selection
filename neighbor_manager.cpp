@@ -19,13 +19,20 @@
 #include <sys/timerfd.h>
 #include <unistd.h>
 
-NeighborManager::NeighborManager(const std::string& specinterface, const std::string& netinterface)
+NeighborManager::NeighborManager(const std::string& specinterface, const std::string& netinterface,
+        const std::string& strategytype)
     : specinterface(specinterface), netinterface(netinterface) {
     //TODO get this from a config file
     std::string prefix("fd00::1"); // prefix to filter for addresses
     own_address = exec("ip a | grep -o '" + prefix + ".*/' | tr -d '/' | tr -d '\n'");
 
-    channel_strategy = new RandomChannelStrategy(specinterface, netinterface);
+    if(strategytype == "random") {
+        channel_strategy = new RandomChannelStrategy(specinterface, netinterface);
+    } else if (strategytype == "correlation") {
+        channel_strategy = new CorrelationChannelStrategy(specinterface, netinterface);
+    } else {
+        throw(std::invalid_argument("unknown channel strategy"));
+    }
 
     //TODO remove temp stuff
     std::string exec_string("hostapd_cli -i " + netinterface + " status");
@@ -144,7 +151,7 @@ void NeighborManager::receive_message(int sockfd) {
             MSG_WAITALL | MSG_TRUNC, (sockaddr*) &src_addr, &addrlen);
     if (received_bytes <= 0) {
         //auto err = std::strerror(errno);
-        throw std::runtime_error(std::string("receiving failed: ") + std::strerror(errno));
+        throw std::runtime_error(std::string{"receiving failed: "} + std::strerror(errno));
     }
     if (received_bytes > signed(buffer.size())) {
         throw std::runtime_error("receive buffer too small");
