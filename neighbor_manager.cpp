@@ -95,7 +95,7 @@ void NeighborManager::send_msg(const std::string address, const std::string msg)
    send_lock.lock();
    e = sendto(sockfd, msg.c_str(), msg.length(), 0, (struct sockaddr*)&addr_struct, sizeof(addr_struct));
    if (e == -1) {
-       throw std::runtime_error("sending failed");
+       throw std::runtime_error("sending failed: " + std::string(strerror(errno)));
    }
    send_lock.unlock();
 
@@ -103,9 +103,7 @@ void NeighborManager::send_msg(const std::string address, const std::string msg)
 
 void NeighborManager::send_neighbors() {
     nlohmann::json neighbor_msg;
-    //nlohmann::json self;
     neighbor_msg["self"]["address"] = own_address;
-    //neighbor_msg["self"]["channel"] = netchannel;
     neighbor_msg["self"]["channel"] = channel_strategy->get_netchannel();
     nlohmann::json neighbor_json(neighbors);
     neighbor_msg["neighbors"] = neighbor_json;
@@ -139,11 +137,11 @@ void NeighborManager::switch_channel(int channel) {
 
 void NeighborManager::receive_message(int sockfd) {
     std::vector<char> buffer(65535);
-    sockaddr src_addr;
+    sockaddr_in6 src_addr;
     socklen_t addrlen = sizeof(src_addr);
 
     auto received_bytes = recvfrom(sockfd, (char *)buffer.data(), buffer.size(),
-            MSG_WAITALL | MSG_TRUNC, &src_addr, &addrlen);
+            MSG_WAITALL | MSG_TRUNC, (sockaddr*) &src_addr, &addrlen);
     if (received_bytes <= 0) {
         //auto err = std::strerror(errno);
         throw std::runtime_error(std::string("receiving failed: ") + std::strerror(errno));
@@ -153,16 +151,14 @@ void NeighborManager::receive_message(int sockfd) {
     }
 
     // try to get receiver address, gives back garbage
-    char src_addr_c[INET6_ADDRSTRLEN];
-    std::vector<char> src_addr_b(50);
-    inet_ntop(src_addr.sa_family, &src_addr.sa_data, src_addr_c, 50);
-    //inet_ntop(src_addr.sa_family, src_addr.sa_data, src_addr_b.data(), 50);
-    inet_ntop(src_addr.sa_family, &src_addr.sa_data, src_addr_b.data(), 50);
+    char src_addr_c[INET6_ADDRSTRLEN] = {};
+    inet_ntop(src_addr.sin6_family, &src_addr.sin6_addr, src_addr_c, 50);
+    std::string src_addr_s(src_addr_c);
 
 
     std::string msg(buffer.begin(), std::next(buffer.begin(), received_bytes));
 
-    std::cerr << "\nreceived msg: " << msg << std::endl;
+    std::cerr << "\nreceived msg from " << src_addr_s << ": " << msg << std::endl;
 
     //TODO: catch parse errors
     nlohmann::json msg_json = nlohmann::json::parse(msg);
@@ -201,6 +197,8 @@ void NeighborManager::receive_message(int sockfd) {
             assert (txdata.size() == txvector.size());
             auto correlation = collector->correlate(txdata, timestamp);
             correlations[msg_json.at("self").at("address")] = correlation;
+            channel_strategy->save_correlation(msg_json.at("self").at("address"), correlation,
+                    std::chrono::time_point<Clock>(std::chrono::milliseconds(timestamp)));
             std::cout << ("\n correlation: " + std::to_string(correlation) + "\n");
         }
     }
@@ -264,7 +262,7 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
             read(pfds[2].fd, &timersElapsed, 8);
 
             channel_strategy->do_something();
-            //std::cout << "\ntimer fired\n";
+            send_tx();
 
             collector->truncate(std::chrono::seconds(20));
             //TODO: write to files while or before truncating
