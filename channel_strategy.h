@@ -29,7 +29,8 @@ protected:
     int specchannel;
     int netchannel;
 
-    void switch_channel(int channel);
+    void switch_channel(int freq);
+    void set_spec_channel(int freq);
 
     // map of address and tuple of correlation and timestamp
     std::map<std::string, std::tuple<double, std::chrono::time_point<Clock>>> correlations;

@@ -7,6 +7,7 @@
 #include <random>
 #include <iostream>
 #include <cassert>
+#include <cstdlib>
 
 
 ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::string& specinterface, const std::string& netinterface):
@@ -16,14 +17,30 @@ ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::s
     netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
     };
 
-void ChannelStrategy::switch_channel(int channel) {
-    std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 1 " + std::to_string(channel));
+void ChannelStrategy::switch_channel(int freq) {
+    std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 1 " + std::to_string(freq));
     if (res != "OK\n") {
-        std::cerr << "\n\033[31mfailed to set channel to " + std::to_string(channel) + ": " + res + "\033[0m";
+        std::cerr << "\n\033[31mfailed to set channel to " + std::to_string(freq) + ": " + res + "\033[0m";
     } else {
-        std::cout << "\n\033[32msuccessfully set channel to " + std::to_string(channel) + "\033[0m\n";
+        std::cout << "\n\033[32msuccessfully set channel to " + std::to_string(freq) + "\033[0m\n";
         netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
-        assert(netchannel == channel);
+        assert(netchannel == freq);
+    }
+}
+
+void ChannelStrategy::set_spec_channel(int freq) {
+    //std::string res = exec("iw dev wlp1s0 set freq " + std::to_string(freq));
+    auto res = std::system(("iw dev wlp1s0 set freq " + std::to_string(freq)).c_str());
+    switch (res) {
+    case 0:
+        std::cout << "\n\033[32msuccessfully set scan channel to " + std::to_string(freq) + "\033[0m\n";
+        break;
+    case 240:
+        std::cerr << "\n\033[31mfailed to set scan channel to " + std::to_string(freq) + ": device busy \033[0m";
+        break;
+    case 234:
+        std::cerr << "\n\033[31mfailed to set scan channel to " + std::to_string(freq) + ": invalid argument \033[0m";
+        break;
     }
 }
 
@@ -49,7 +66,10 @@ void CorrelationChannelStrategy::do_something() {
             oldest = *i;
         }
     }
-    int channel = neighbor_manager->get_freq_from_neighbor(oldest.first);
+    if (oldest.first != "") {
+        int channel = neighbor_manager->get_freq_from_neighbor(oldest.first);
+        set_spec_channel(channel);
+    }
 }
 
 void RandomChannelStrategy::do_something() {
