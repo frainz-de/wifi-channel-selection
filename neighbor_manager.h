@@ -21,6 +21,7 @@ public:
     void scanandsend();
     void send_tx();
     void set_collector(Collector* collector);
+    int get_freq_from_neighbor(std::string address);
 
     std::thread start_thread(volatile bool* running, int abortpipe);
     
@@ -46,5 +47,5 @@ private:
     std::set<std::string> neighbors_neighbors;
 
     std::map<std::string, int> channels;
-    std::map<std::string, double> correlations;
+    //std::map<std::string, double> correlations;
 };

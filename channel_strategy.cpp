@@ -1,4 +1,5 @@
 #include "channel_strategy.h"
+#include "neighbor_manager.h"
 #include "helpers.h"
 
 #include <chrono>
@@ -8,8 +9,8 @@
 #include <cassert>
 
 
-ChannelStrategy::ChannelStrategy(const std::string& specinterface, const std::string& netinterface):
-    specinterface(specinterface), netinterface(netinterface) {
+ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::string& specinterface, const std::string& netinterface):
+    neighbor_manager(neighbor_manager), specinterface(specinterface), netinterface(netinterface) {
 
     specchannel = stoi(exec("iw dev " + specinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
     netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
@@ -48,6 +49,7 @@ void CorrelationChannelStrategy::do_something() {
             oldest = *i;
         }
     }
+    int channel = neighbor_manager->get_freq_from_neighbor(oldest.first);
 }
 
 void RandomChannelStrategy::do_something() {

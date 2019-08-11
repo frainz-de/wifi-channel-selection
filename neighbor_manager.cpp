@@ -27,9 +27,9 @@ NeighborManager::NeighborManager(const std::string& specinterface, const std::st
     own_address = exec("ip a | grep -o '" + prefix + ".*/' | tr -d '/' | tr -d '\n'");
 
     if(strategytype == "random") {
-        channel_strategy = new RandomChannelStrategy(specinterface, netinterface);
+        channel_strategy = new RandomChannelStrategy(this, specinterface, netinterface);
     } else if (strategytype == "correlation") {
-        channel_strategy = new CorrelationChannelStrategy(specinterface, netinterface);
+        channel_strategy = new CorrelationChannelStrategy(this, specinterface, netinterface);
     } else {
         throw(std::invalid_argument("unknown channel strategy"));
     }
@@ -141,6 +141,9 @@ void NeighborManager::switch_channel(int channel) {
     std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 3 " + std::to_string(channel));
 }
 
+int NeighborManager::get_freq_from_neighbor(std::string address) {
+    return channels.at(address);
+}
 
 void NeighborManager::receive_message(int sockfd) {
     std::vector<char> buffer(65535);
@@ -209,7 +212,7 @@ void NeighborManager::receive_message(int sockfd) {
             auto timestamp = msg_json["txmsg"]["timestamp"];
             assert (txdata.size() == txvector.size());
             auto correlation = collector->correlate(txdata, timestamp);
-            correlations[msg_json.at("self").at("address")] = correlation;
+            //correlations[msg_json.at("self").at("address")] = correlation;
             channel_strategy->save_correlation(msg_json.at("self").at("address"), correlation,
                     std::chrono::time_point<Clock>(std::chrono::milliseconds(timestamp)));
             std::cout << ("\n correlation: " + std::to_string(correlation) + "\n");
