@@ -162,13 +162,13 @@ void Collector::truncate(std::chrono::milliseconds time) {
 
     std::lock_guard<std::mutex> guard(file_lock);
 
-    for (auto i = received_series.begin(); (*i)->timestamp < cuttime;) {
+    for (auto i = received_series.begin(); i != received_series.end() && (*i)->timestamp < cuttime;) {
         delete *i;
         received_series.erase(i++);
         (*i)->output(outputscanfile);
     }
 
-    for (auto i = tx_series.begin(); std::get<0>(*i) < cuttime;) {
+    for (auto i = tx_series.begin(); i != tx_series.end() && std::get<0>(*i) < cuttime;) {
         tx_series.erase(i++);
         outputtxfile << std::chrono::duration_cast<std::chrono::milliseconds>(std::get<0>(*i).time_since_epoch()).count()
             << ";" << std::get<1>(*i) << ";\n";
