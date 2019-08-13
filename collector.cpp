@@ -254,7 +254,7 @@ void Collector::run(volatile bool* running) {
         last_tx_bytes = tx_bytes;
         tx_series.push_back(txdatapoint);
 
-        // sleep for a millisecond
+        // sleep for a millisecond, may not be necessary
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         scanfile.clear();
     }

@@ -66,6 +66,8 @@ void CorrelationChannelStrategy::do_something() {
             oldest = *i;
         }
     }
+
+    // change scanning channel to bring the oldest measurement up to date
     if (oldest.first != "") {
         int channel = neighbor_manager->get_freq_from_neighbor(oldest.first);
         set_spec_channel(channel);
