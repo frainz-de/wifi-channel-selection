@@ -199,6 +199,7 @@ void NeighborManager::receive_message(int sockfd) {
         channels[msg_json["self"]["address"]] = msg_json["self"]["channel"];
         std::cout << "\nnoting channel " << msg_json["self"]["channel"]
             << " to " << msg_json["self"]["address"] << std::endl;
+        neighbors_neighbors.insert(std::string(msg_json.at("self").at("address")));
     }
 
     if(msg_json.find("txmsg") != msg_json.end()) {
