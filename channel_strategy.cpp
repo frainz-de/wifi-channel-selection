@@ -56,6 +56,24 @@ void ChannelStrategy::record_channel(std::string address, int freq) {
     channels[address] = freq;
 }
 
+int ChannelStrategy::get_least_used_channel() {
+    std::map<int, double> usage_map; //channel, usage
+    //initialize
+    for (auto i = possible_channels.begin(); i != possible_channels.end(); i++) {
+        usage_map[*i] = 0;
+    }
+
+    for (auto i = correlations.begin(); i != correlations.end(); i++) {
+        usage_map[channels[i->first]] += std::get<0>(i->second);
+    }
+
+    auto least_used = std::min_element(usage_map.begin(), usage_map.end(),
+            [](decltype(usage_map)::value_type& l, decltype(usage_map)::value_type& r)
+            -> bool {return l.second < r.second;});
+
+    return least_used->first;
+}
+
 int ChannelStrategy::get_specchannel() {return specchannel;}
 int ChannelStrategy::get_netchannel() {return netchannel;}
 
@@ -76,6 +94,11 @@ void CorrelationChannelStrategy::do_something() {
         //int channel = neighbor_manager->get_freq_from_neighbor(oldest.first);
         int channel = channels[oldest.first];
         set_spec_channel(channel);
+    }
+
+    int least_used = get_least_used_channel();
+    if (least_used != netchannel) {
+        switch_channel(least_used);
     }
 }
 
