@@ -68,8 +68,7 @@ int ChannelStrategy::get_least_used_channel() {
     }
 
     auto least_used = std::min_element(usage_map.begin(), usage_map.end(),
-            [](decltype(usage_map)::value_type& l, decltype(usage_map)::value_type& r)
-            -> bool {return l.second < r.second;});
+            [](const auto& l, const auto& r) -> bool {return l.second < r.second;});
 
     return least_used->first;
 }
