@@ -52,6 +52,10 @@ void ChannelStrategy::save_correlation(std::string address, double correlation,
     std::cout << "\nnoting correlation " + std::to_string(correlation) + " for neighbor " + address + "\n";
 }
 
+void ChannelStrategy::record_channel(std::string address, int freq) {
+    channels[address] = freq;
+}
+
 int ChannelStrategy::get_specchannel() {return specchannel;}
 int ChannelStrategy::get_netchannel() {return netchannel;}
 
@@ -69,7 +73,8 @@ void CorrelationChannelStrategy::do_something() {
 
     // change scanning channel to bring the oldest measurement up to date
     if (oldest.first != "") {
-        int channel = neighbor_manager->get_freq_from_neighbor(oldest.first);
+        //int channel = neighbor_manager->get_freq_from_neighbor(oldest.first);
+        int channel = channels[oldest.first];
         set_spec_channel(channel);
     }
 }

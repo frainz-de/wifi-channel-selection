@@ -21,7 +21,7 @@ public:
     void scanandsend();
     void send_tx();
     void set_collector(Collector* collector);
-    int get_freq_from_neighbor(std::string address);
+    //int get_freq_from_neighbor(std::string address);
 
     std::thread start_thread(volatile bool* running, int abortpipe);
     
@@ -46,6 +46,6 @@ private:
     //TODO store as pairs of address and channel, maybe own class?
     std::set<std::string> neighbors_neighbors;
 
-    std::map<std::string, int> channels;
+    //std::map<std::string, int> channels;
     //std::map<std::string, double> correlations;
 };

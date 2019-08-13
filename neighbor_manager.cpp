@@ -141,9 +141,9 @@ void NeighborManager::switch_channel(int channel) {
     std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 3 " + std::to_string(channel));
 }
 
-int NeighborManager::get_freq_from_neighbor(std::string address) {
-    return channels.at(address);
-}
+//int NeighborManager::get_freq_from_neighbor(std::string address) {
+//    return channels.at(address);
+//}
 
 void NeighborManager::receive_message(int sockfd) {
     std::vector<char> buffer(65535);
@@ -196,7 +196,8 @@ void NeighborManager::receive_message(int sockfd) {
     }
 
     if(msg_json.find("self") != msg_json.end()) {
-        channels[msg_json["self"]["address"]] = msg_json["self"]["channel"];
+        //channels[msg_json["self"]["address"]] = msg_json["self"]["channel"];
+        channel_strategy->record_channel(msg_json["self"]["address"], msg_json["self"]["channel"]);
         std::cout << "\nnoting channel " << msg_json["self"]["channel"]
             << " to " << msg_json["self"]["address"] << std::endl;
         neighbors_neighbors.insert(std::string(msg_json.at("self").at("address")));

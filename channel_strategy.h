@@ -19,6 +19,7 @@ public:
     int get_specchannel();
     int get_netchannel();
     void save_correlation(std::string address, double correlation, std::chrono::time_point<Clock> timestamp);
+    void record_channel(std::string address, int freq);
 
 protected:
     NeighborManager* neighbor_manager;
@@ -34,6 +35,7 @@ protected:
 
     // map of address and tuple of correlation and timestamp
     std::map<std::string, std::tuple<double, std::chrono::time_point<Clock>>> correlations;
+    std::map<std::string, int> channels;
 private:
 };
 
