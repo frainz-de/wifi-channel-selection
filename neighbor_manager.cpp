@@ -168,7 +168,9 @@ void NeighborManager::receive_message(int sockfd) {
 
     std::string msg(buffer.begin(), std::next(buffer.begin(), received_bytes));
 
-    std::cerr << "\nreceived msg from " << src_addr_s << ": " << msg << std::endl;
+    if (verbose) {
+        std::cerr << "\nreceived msg from " << src_addr_s << ": " << msg << std::endl;
+    }
 
     //TODO: catch parse errors
     nlohmann::json msg_json;

@@ -13,6 +13,7 @@
 // global variable to exit main loop gracefully
 volatile bool running = true;
 int abortpipe[2];
+bool verbose;
 
 // catch SIGINT to terminate gracefully
 void signalHandler(int sig) {
@@ -32,6 +33,7 @@ int main(int argc, char* argv[]) {
     int freq = 0;
     //StrategyType strategytype;
     std::string strategytype;
+//    bool verbose;
 
     // proper command line parsing
     try {
@@ -44,6 +46,8 @@ int main(int argc, char* argv[]) {
                 "Frequency to scan at", false, 0, "freq", cmd);
         TCLAP::ValueArg<std::string> strategy_arg("c", "channelstrategy",
                 "Channel selection strategy to use", false, "correlation", "strategy type", cmd);
+        TCLAP::SwitchArg verbose_arg("v", "verbose",
+                "Produces more output to stdout", cmd);
 
         cmd.parse(argc, argv);
 
@@ -51,6 +55,7 @@ int main(int argc, char* argv[]) {
         netinterface = netinterface_arg.getValue();
         freq = freq_arg.getValue();
         strategytype = strategy_arg.getValue();
+        verbose = verbose_arg.getValue();
 
     } catch (TCLAP::ArgException &e) {
         std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
