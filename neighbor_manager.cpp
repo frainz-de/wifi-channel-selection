@@ -200,8 +200,8 @@ void NeighborManager::receive_message(int sockfd) {
     if(msg_json.find("self") != msg_json.end()) {
         //channels[msg_json["self"]["address"]] = msg_json["self"]["channel"];
         channel_strategy->record_channel(msg_json["self"]["address"], msg_json["self"]["channel"]);
-        std::cout << "\nnoting channel " << msg_json["self"]["channel"]
-            << " to " << msg_json["self"]["address"] << std::endl;
+        std::cout << "\nnoting channel " + std::to_string(msg_json["self"]["channel"].get<int>())
+            + " to " + msg_json["self"]["address"].get<std::string>() + "\n";
         neighbors_neighbors.insert(std::string(msg_json.at("self").at("address")));
     }
 
