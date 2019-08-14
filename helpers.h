@@ -3,7 +3,7 @@
 #include <string>
 
 // global verbosity flag
-extern bool verbose;
+extern int verbosity;
 
 void rtrim(std::string &s);
 

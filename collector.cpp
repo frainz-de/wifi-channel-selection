@@ -14,6 +14,7 @@ extern "C" {
 #include <cassert>
 #include <sstream>
 #include <nlohmann/json.hpp>
+#include <signal.h>
 
 Collector::Collector(std::string& specinterface, std::string& netinterface) {
     
@@ -84,12 +85,17 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
         std::cerr << "\ncannot correlate without data\n";
         return nan("");
     }
-    auto timestamp = std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(timeint));
+    auto tx_timestamp = std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(timeint));
     auto rindex = received_series.rbegin();
     auto last = (*rindex)->timestamp;
 
     // search beginning of correlation interval
-    for(; (*rindex)->timestamp > timestamp; ++rindex);
+    for(; rindex != received_series.rend() && (*rindex)->timestamp > tx_timestamp; ++rindex);
+    if (rindex == received_series.rend()) {
+        //throw(std::runtime_error("cannot start correlation"));
+        std::cerr << "\n\033[31mnot enough data for correlation\033[0m\n";
+        return nan("");
+    }
 
     auto findex = rindex.base();
     assert (findex != received_series.begin());
@@ -98,7 +104,7 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     //auto bdistance = rindex - received_series.rend();
     //auto fdistance = findex - received_series.begin();
 
-    auto tx_timestamp = timestamp;
+    //auto tx_timestamp = timestamp;
     double rx_avg = 0;
     double tx_avg = 0;
     int interval = 0;
@@ -222,8 +228,10 @@ void Collector::run(volatile bool* running) {
         rtrim(time);
 
         // print status
-        std::cout << "\r" << time << ": collected " << sample_count
-            << " samples, rssi: " << avg_rssi << "    " << std::flush;
+        if (verbosity >= 1) {
+            std::cout << "\r" << time << ": collected " << sample_count
+                << " samples, rssi: " << avg_rssi << "    " << std::flush;
+        }
         
         // try to open network statistics file
         std::ifstream txfile;

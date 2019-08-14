@@ -168,7 +168,7 @@ void NeighborManager::receive_message(int sockfd) {
 
     std::string msg(buffer.begin(), std::next(buffer.begin(), received_bytes));
 
-    if (verbose) {
+    if (verbosity >= 2) {
         std::cerr << "\nreceived msg from " << src_addr_s << ": " << msg << std::endl;
     }
 
@@ -201,7 +201,7 @@ void NeighborManager::receive_message(int sockfd) {
         //channels[msg_json["self"]["address"]] = msg_json["self"]["channel"];
         channel_strategy->record_channel(msg_json["self"]["address"], msg_json["self"]["channel"]);
         std::cout << "\nnoting channel " + std::to_string(msg_json["self"]["channel"].get<int>())
-            + " to " + msg_json["self"]["address"].get<std::string>() + "\n";
+            + " for neighbor " + msg_json["self"]["address"].get<std::string>() + "\n";
         neighbors_neighbors.insert(std::string(msg_json.at("self").at("address")));
     }
 
@@ -217,9 +217,10 @@ void NeighborManager::receive_message(int sockfd) {
             assert (txdata.size() == txvector.size());
             auto correlation = collector->correlate(txdata, timestamp);
             //correlations[msg_json.at("self").at("address")] = correlation;
-            channel_strategy->save_correlation(msg_json.at("self").at("address"), correlation,
-                    std::chrono::time_point<Clock>(std::chrono::milliseconds(timestamp)));
-            std::cout << ("\n correlation: " + std::to_string(correlation) + "\n");
+            if(!std::isnan(correlation)) {
+                channel_strategy->save_correlation(msg_json.at("self").at("address"), correlation,
+                        std::chrono::time_point<Clock>(std::chrono::milliseconds(timestamp)));
+            }
         }
     }
 
