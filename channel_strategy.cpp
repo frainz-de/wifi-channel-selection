@@ -49,7 +49,8 @@ void ChannelStrategy::save_correlation(std::string address, double correlation,
 
     //correlations[address] = {correlation, timestamp};
     correlations.insert({address, {correlation, timestamp}});
-    std::cout << "\nnoting correlation " + std::to_string(correlation) + " for neighbor " + address + "\n";
+    std::cout << "\nnoting correlation \e[33m" + std::to_string(correlation)
+        + "\e[36m for neighbor \e[36m" + address + "\e[0m\n";
 }
 
 void ChannelStrategy::record_channel(std::string address, int freq) {
