@@ -2,7 +2,7 @@
 Description=Set WIFI Channels according to correlated influence
 
 [Service]
-ExecStart=/root/collector %i
+ExecStart=/root/collector -v 0 %i
 Restart=always
 RestartSec=1
 
