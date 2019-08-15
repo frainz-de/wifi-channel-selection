@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
     int freq = 0;
     //StrategyType strategytype;
     std::string strategytype;
+    bool generate_traffic = false;
 
     // proper command line parsing
     try {
@@ -47,6 +48,9 @@ int main(int argc, char* argv[]) {
                 "Channel selection strategy to use", false, "correlation", "strategy type", cmd);
         TCLAP::ValueArg<int> verbosity_arg("v", "verbosity",
                 "Amount of output to produce", false, 1, "verbosity", cmd);
+        TCLAP::SwitchArg traffic_arg("t", "traffic",
+                "Generate traffic using yes | ncat", cmd);
+
 
         cmd.parse(argc, argv);
 
@@ -55,6 +59,7 @@ int main(int argc, char* argv[]) {
         freq = freq_arg.getValue();
         strategytype = strategy_arg.getValue();
         verbosity = verbosity_arg.getValue();
+        generate_traffic = traffic_arg.getValue();
 
     } catch (TCLAP::ArgException &e) {
         std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
@@ -83,6 +88,14 @@ int main(int argc, char* argv[]) {
     pthread_setname_np(scan_thread.native_handle(), "scan_thread");
     std::thread collector_thread = collector.start_thread(&running);
     pthread_setname_np(collector_thread.native_handle(), "collector_thread");
+
+    std::thread traffic_thread;
+    if (generate_traffic) {
+        traffic_thread = std::thread([] {std::system("yes | ncat -us 10.1.0.254 255.255.255.255 1343");});
+        pthread_setname_np(traffic_thread.native_handle(), "traffic_thread");
+
+        traffic_thread.join();
+    }
 
     // wait for all threads
     neighbor_thread.join();
