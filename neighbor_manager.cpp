@@ -247,7 +247,7 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
 
     // logic to receive neighbors of neighbors --> start at the beginning of thread
     // maybe use std::future for scanning
-    int sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
+    int sockfd = socket(AF_INET6, SOCK_DGRAM|SOCK_CLOEXEC, 0);
     //char buffer[1500] = {};
 
     struct sockaddr_in6 neighbor_addr = {};
