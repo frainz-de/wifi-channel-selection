@@ -168,13 +168,13 @@ void Collector::truncate(std::chrono::milliseconds time) {
 
     std::lock_guard<std::mutex> guard(file_lock);
 
-    for (auto i = received_series.begin(); i != received_series.end() && (*i)->timestamp < cuttime;) {
+    for (auto i = received_series.begin(); received_series.size() > 2 && (*i)->timestamp < cuttime;) {
+        (*i)->output(outputscanfile);
         delete *i;
         received_series.erase(i++);
-        (*i)->output(outputscanfile);
     }
 
-    for (auto i = tx_series.begin(); i != tx_series.end() && std::get<0>(*i) < cuttime;) {
+    for (auto i = tx_series.begin(); tx_series.size() > 2 && std::get<0>(*i) < cuttime;) {
         tx_series.erase(i++);
         outputtxfile << std::chrono::duration_cast<std::chrono::milliseconds>(std::get<0>(*i).time_since_epoch()).count()
             << ";" << std::get<1>(*i) << ";\n";
@@ -208,9 +208,9 @@ void Collector::run(volatile bool* running) {
         //TODO running average of rssi
         if(sample_count > 1) {
             //auto& previous = received_series.at(received_series.size()-2);
-            auto& previous = *std::prev(received_series.end(), 2);
+            auto previous = *std::prev(received_series.end(), 2);
             //auto& current = received_series.at(received_series.size()-1);
-            auto& current = received_series.back();
+            auto current = received_series.back();
             auto delta_t = current->timestamp - previous->timestamp;
             std::chrono::milliseconds tau(1000);
             //double alpha = delta_t / tau;
