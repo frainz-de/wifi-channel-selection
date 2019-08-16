@@ -106,6 +106,7 @@ void NeighborManager::send_msg(const std::string address, const std::string msg)
    }
    send_lock.unlock();
 
+   close(sockfd);
 }
 
 void NeighborManager::send_neighbors() {
