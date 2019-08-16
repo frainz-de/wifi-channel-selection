@@ -13,9 +13,20 @@
 ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::string& specinterface, const std::string& netinterface):
     neighbor_manager(neighbor_manager), specinterface(specinterface), netinterface(netinterface) {
 
-    specchannel = stoi(exec("iw dev " + specinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
-    netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
-    };
+    std::string specchannel_string  = exec("iw dev " + specinterface + " info | grep channel | awk '{print $3}' | tr -d '('");
+    if (!specchannel_string.empty()) {
+        specchannel = stoi(specchannel_string);
+    } else {
+        std::cerr << "\n\e[31mcould not deduce spectral channel\e[0m\n";
+    }
+
+    std::string netchannel_string  = exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('");
+    if (!netchannel_string.empty()) {
+        netchannel = std::stoi(netchannel_string);
+    } else {
+        std::cerr << "\n\e[31mcould not deduce network channel\e[0m\n";
+    }
+}
 
 void ChannelStrategy::switch_channel(int freq) {
     std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 1 " + std::to_string(freq));
