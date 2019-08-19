@@ -41,17 +41,20 @@ void ChannelStrategy::switch_channel(int freq) {
 
 void ChannelStrategy::set_spec_channel(int freq) {
     //std::string res = exec("iw dev wlp1s0 set freq " + std::to_string(freq));
-    auto res = std::system(("iw dev wlp1s0 set freq " + std::to_string(freq)).c_str());
+    auto res = WEXITSTATUS(std::system(("iw dev wlp1s0 set freq " + std::to_string(freq)).c_str()));
     switch (res) {
     case 0:
         std::cout << "\n\033[32msuccessfully set scan channel to " + std::to_string(freq) + "\033[0m\n";
         break;
     case 240:
-        std::cerr << "\n\033[31mfailed to set scan channel to " + std::to_string(freq) + ": device busy \033[0m";
+        std::cerr << "\n\033[31mfailed to set scan channel to " + std::to_string(freq) + ": device busy \033[0m\n";
         break;
     case 234:
-        std::cerr << "\n\033[31mfailed to set scan channel to " + std::to_string(freq) + ": invalid argument \033[0m";
+        std::cerr << "\n\033[31mfailed to set scan channel to " + std::to_string(freq) + ": invalid argument \033[0m\n";
         break;
+    default:
+        std::cerr << "\n\033[31mfailed to set scan channel to " + std::to_string(freq)
+            + ", error code: " + std::to_string(res) + "\033[0m\n";
     }
 }
 
