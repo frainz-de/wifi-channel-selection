@@ -230,10 +230,11 @@ void Collector::run(volatile bool* running) {
         std::string time = std::ctime(&in_time_t);
         rtrim(time);
 
+        auto last_freq = received_series.back()->center_freq;
         // print status
         if (verbosity >= 1) {
             std::cout << "\r" << time << ": collected " << sample_count
-                << " samples, rssi: " << avg_rssi << "    " << std::flush;
+                << " samples, freq: " << last_freq << ", rssi: " << avg_rssi << "    " << std::flush;
         }
         
         // try to open network statistics file
