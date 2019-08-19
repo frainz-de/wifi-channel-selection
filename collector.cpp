@@ -86,20 +86,23 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
         return nan("");
     }
     auto tx_timestamp = std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(timeint));
-    auto rindex = received_series.rbegin();
-    auto last = (*rindex)->timestamp;
+    //auto rindex = received_series.rbegin();
+    auto index = --received_series.end();
+    auto last = (*index)->timestamp;
 
     // search beginning of correlation interval
-    for(; rindex != received_series.rend() && (*rindex)->timestamp > tx_timestamp; ++rindex);
-    if (rindex == received_series.rend()) {
+    for(; index != --received_series.begin() && (*index)->timestamp > tx_timestamp; --index);
+    //for(; rindex != received_series.rend() && (*rindex)->timestamp > tx_timestamp; ++rindex);
+    if (index == --received_series.begin()) {
         //throw(std::runtime_error("cannot start correlation"));
         std::cerr << "\n\033[31mnot enough data for correlation\033[0m\n";
         return nan("");
     }
 
-    auto findex = rindex.base();
-    assert (findex != received_series.begin());
-    auto ftimestamp = (*findex)->timestamp;
+    //auto findex = rindex.base();
+    //auto findex = index;
+    assert (index != received_series.begin());
+    auto ftimestamp = (*index)->timestamp;
 
     //auto bdistance = rindex - received_series.rend();
     //auto fdistance = findex - received_series.begin();
@@ -108,7 +111,7 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     double rx_avg = 0;
     double tx_avg = 0;
     int interval = 0;
-    auto rxindex = findex;
+    auto rxindex = index;
     auto rxendindex = received_series.end();
 
     for(auto vindex = txvector.begin(); vindex != txvector.end(); ++vindex) {
@@ -137,7 +140,7 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
 
 
     double prodsum = 0;
-    rxindex = findex;
+    rxindex = index;
     for(auto vindex = txvector.begin(); vindex != txvector.end(); ++vindex) {
         tx_timestamp += std::chrono::milliseconds(1);
         double avg_rssi = 0;
