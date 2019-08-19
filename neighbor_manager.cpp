@@ -255,7 +255,10 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
     neighbor_addr.sin6_family = AF_INET6;
     neighbor_addr.sin6_port = htons(8901);
     neighbor_addr.sin6_addr = in6addr_any;
-    bind(sockfd, (const struct sockaddr *) &neighbor_addr, sizeof(neighbor_addr));
+    int e = bind(sockfd, (const struct sockaddr *) &neighbor_addr, sizeof(neighbor_addr));
+    if (e == -1) {
+       throw std::runtime_error("binding socket failed: " + std::string(strerror(errno)));
+    }
 
     int timerfd = timerfd_create(CLOCK_REALTIME, 0);
     itimerspec spec = {{.tv_sec=1}, {.tv_sec=1}};
