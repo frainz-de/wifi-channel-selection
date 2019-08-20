@@ -60,7 +60,7 @@ void NeighborManager::scan() {
 
     std::cout << "\nstarting scan\n";
     std::string neighbor_string;
-    neighbor_string = exec("for i in $(iw dev " + specinterface + " scan -u | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
+    neighbor_string = exec("for i in $(iw dev " + netinterface + " scan -u ap-force | grep '42:42:42' |  awk '{ s = \"\"; for (i = 6; i <= NF; i++) s = s $i; print s }'); do echo $i | xxd -p -r; printf '\n'; done | sort");
 
     // parse string with neighbor addresses into list
     std::set<std::string> neighbor_list;

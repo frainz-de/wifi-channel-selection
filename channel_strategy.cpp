@@ -41,7 +41,7 @@ void ChannelStrategy::switch_channel(int freq) {
 
 void ChannelStrategy::set_spec_channel(int freq) {
     //std::string res = exec("iw dev wlp1s0 set freq " + std::to_string(freq));
-    auto res = WEXITSTATUS(std::system(("iw dev wlp1s0 set freq " + std::to_string(freq)).c_str()));
+    auto res = WEXITSTATUS(std::system(("iw dev " + specinterface + " set freq " + std::to_string(freq)).c_str()));
     switch (res) {
     case 0:
         std::cout << "\n\033[32msuccessfully set scan channel to " + std::to_string(freq) + "\033[0m\n";

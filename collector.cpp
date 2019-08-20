@@ -22,8 +22,8 @@ Collector::Collector(std::string& specinterface, std::string& netinterface) {
     {
         auto dir = opendir(("/sys/class/net/" + specinterface + "/device/ieee80211/").c_str()); 
         if (!dir) {
-            std::cerr << "Error deducing interface: " << strerror(errno) << std::endl;
-            throw std::runtime_error("");
+            std::cerr << "Error deducing specinterface: " << strerror(errno) << std::endl;
+            throw std::runtime_error(std::string{"Error deducing specinterface: "} + strerror(errno));
         }
         readdir(dir);
         readdir(dir);
@@ -230,7 +230,7 @@ void Collector::run(volatile bool* running) {
         std::string time = std::ctime(&in_time_t);
         rtrim(time);
 
-        auto last_freq = received_series.back()->center_freq;
+        auto last_freq = received_series.back() ? received_series.back()->center_freq : 0;
         // print status
         if (verbosity >= 1) {
             std::cout << "\r" << time << ": collected " << sample_count
