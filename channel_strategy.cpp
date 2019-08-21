@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
+#include <cmath>
 
 
 ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::string& specinterface, const std::string& netinterface):
@@ -83,7 +84,7 @@ int ChannelStrategy::get_least_used_channel() {
     }
 
     auto least_used = std::min_element(usage_map.begin(), usage_map.end(),
-            [](const auto& l, const auto& r) -> bool {return l.second < r.second;});
+            [](const auto& l, const auto& r) -> bool {return std::abs(l.second) < std::abs(r.second);});
 
     return least_used->first;
 }
@@ -94,12 +95,20 @@ int ChannelStrategy::get_netchannel() {return netchannel;}
 
 void CorrelationChannelStrategy::do_something() {
    // get neighbor with oldest / no correlation and change spec channel accordingly
+    //std::pair<std::string, std::tuple<double, std::chrono::time_point<Clock>>> oldest
+    //    = {"", {0, std::chrono::time_point<Clock>::max()}};
+
     std::pair<std::string, std::tuple<double, std::chrono::time_point<Clock>>> oldest
         = {"", {0, std::chrono::time_point<Clock>::max()}};
 
-    for (auto i = correlations.begin(); i != correlations.end(); i++) {
-        if (std::get<1>(i->second) <= std::get<1>(oldest.second)) {
-            oldest = *i;
+    for (auto i = channels.begin(); i != channels.end(); i++) {
+        //if (std::get<1>(i->second) <= std::get<1>(oldest.second)) {
+
+        if (std::get<1>(correlations[std::get<0>(*i)]) <= std::get<1>(std::get<1>(oldest))) {
+            //oldest = correlations[std::get<0>(*i)];
+            //oldest = *i;
+            oldest.first = std::get<0>(*i);
+            oldest.second = correlations[std::get<0>(*i)];
         }
     }
 
@@ -107,7 +116,9 @@ void CorrelationChannelStrategy::do_something() {
     if (oldest.first != "") {
         //int channel = neighbor_manager->get_freq_from_neighbor(oldest.first);
         int channel = channels[oldest.first];
-        set_spec_channel(channel);
+        if (channel != specchannel) {
+            set_spec_channel(channel);
+        }
     }
 
     int least_used = get_least_used_channel();

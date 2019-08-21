@@ -36,7 +36,7 @@ protected:
 
     // map of address and tuple of correlation and timestamp
     std::map<std::string, std::tuple<double, std::chrono::time_point<Clock>>> correlations;
-    std::map<std::string, int> channels;
+    std::map<std::string, int> channels; // map of neighbor and channel
 private:
 };
 
