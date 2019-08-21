@@ -169,7 +169,7 @@ void NeighborManager::receive_message(int sockfd) {
 
     std::string msg(buffer.begin(), std::next(buffer.begin(), received_bytes));
 
-    if (verbosity >= 2) {
+    if (verbosity >= 3) {
         std::cerr << "\nreceived msg from " << src_addr_s << ": " << msg << std::endl;
     }
 
@@ -207,6 +207,12 @@ void NeighborManager::receive_message(int sockfd) {
     }
 
     if(msg_json.find("txmsg") != msg_json.end()) {
+
+        if (verbosity == 2) {
+            std::cout << "\n\e[34mreceived tx message from " + msg_json.at("self").at("address").get<std::string>()
+                + ", channel: " + std::to_string(msg_json.at("self").at("channel").get<int>()) + "\e[0m\n";
+        }
+
         int channel = msg_json.at("self").at("channel");
         if(channel == channel_strategy->get_netchannel()) {
         //TODO put back in, only this is only for debugging
