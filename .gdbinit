@@ -697,3 +697,4 @@ set print sevenbit-strings off
 #set detach-on-fork off
 
 set print elements 0
+set history save on
