@@ -31,10 +31,11 @@ ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::s
 
 void ChannelStrategy::switch_channel(int freq) {
     std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 1 " + std::to_string(freq));
-    if (res != "OK\n") {
-        std::cerr << "\n\033[31mfailed to set channel to " + std::to_string(freq) + ": " + res + "\033[0m";
+    rtrim(res);
+    if (res != "OK") {
+        std::cerr << "\n\033[41mfailed to set channel to " + std::to_string(freq) + ": " + res + "\033[0m\n";
     } else {
-        std::cout << "\n\033[32msuccessfully set channel to " + std::to_string(freq) + "\033[0m\n";
+        std::cout << "\n\033[42msuccessfully set channel to " + std::to_string(freq) + "\033[0m\n";
         netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
         assert(netchannel == freq);
     }
@@ -46,6 +47,7 @@ void ChannelStrategy::set_spec_channel(int freq) {
     switch (res) {
     case 0:
         std::cout << "\n\033[32msuccessfully set scan channel to " + std::to_string(freq) + "\033[0m\n";
+        netchannel = stoi(exec("iw dev " + specinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
         break;
     case 240:
         std::cerr << "\n\033[31mfailed to set scan channel to " + std::to_string(freq) + ": device busy \033[0m\n";
@@ -94,9 +96,7 @@ int ChannelStrategy::get_netchannel() {return netchannel;}
 
 
 void CorrelationChannelStrategy::do_something() {
-   // get neighbor with oldest / no correlation and change spec channel accordingly
-    //std::pair<std::string, std::tuple<double, std::chrono::time_point<Clock>>> oldest
-    //    = {"", {0, std::chrono::time_point<Clock>::max()}};
+    //get neighbor with oldest / no correlation and change spec channel accordingly
 
     std::pair<std::string, std::tuple<double, std::chrono::time_point<Clock>>> oldest
         = {"", {0, std::chrono::time_point<Clock>::max()}};
