@@ -32,11 +32,12 @@ ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::s
 void ChannelStrategy::switch_channel(int freq) {
     std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 1 " + std::to_string(freq));
     rtrim(res);
+    int netchannel_local = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
+    assert(netchannel == netchannel_local);
     if (res != "OK") {
         std::cerr << "\n\033[41mfailed to set channel to " + std::to_string(freq) + ": " + res + "\033[0m\n";
     } else {
         std::cout << "\n\033[42msuccessfully set channel to " + std::to_string(freq) + "\033[0m\n";
-        netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
         assert(netchannel == freq);
     }
 }
@@ -44,10 +45,10 @@ void ChannelStrategy::switch_channel(int freq) {
 void ChannelStrategy::set_spec_channel(int freq) {
     //std::string res = exec("iw dev wlp1s0 set freq " + std::to_string(freq));
     auto res = WEXITSTATUS(std::system(("iw dev " + specinterface + " set freq " + std::to_string(freq)).c_str()));
+    specchannel = stoi(exec("iw dev " + specinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
     switch (res) {
     case 0:
         std::cout << "\n\033[32msuccessfully set scan channel to " + std::to_string(freq) + "\033[0m\n";
-        netchannel = stoi(exec("iw dev " + specinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
         break;
     case 240:
         std::cerr << "\n\033[31mfailed to set scan channel to " + std::to_string(freq) + ": device busy \033[0m\n";
