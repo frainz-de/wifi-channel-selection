@@ -214,7 +214,7 @@ void NeighborManager::receive_message(int sockfd) {
         }
 
         int channel = msg_json.at("self").at("channel");
-        if(channel == channel_strategy->get_netchannel()) {
+        if(channel == channel_strategy->get_specchannel()) {
         //TODO put back in, only this is only for debugging
         //{
             auto txdata = msg_json["txmsg"]["txdata"];
