@@ -30,15 +30,17 @@ ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::s
 }
 
 void ChannelStrategy::switch_channel(int freq) {
-    std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 1 " + std::to_string(freq));
-    rtrim(res);
     int netchannel_local = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
     assert(netchannel == netchannel_local);
-    if (res != "OK") {
-        std::cerr << "\n\033[41mfailed to set channel to " + std::to_string(freq) + ": " + res + "\033[0m\n";
-    } else {
+
+    std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 1 " + std::to_string(freq));
+    rtrim(res);
+    if (res == "OK") {
         std::cout << "\n\033[42msuccessfully set channel to " + std::to_string(freq) + "\033[0m\n";
+        netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
         assert(netchannel == freq);
+    } else {
+        std::cerr << "\n\033[41mfailed to set channel to " + std::to_string(freq) + ": " + res + "\033[0m\n";
     }
 }
 
