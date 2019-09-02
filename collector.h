@@ -2,6 +2,7 @@
 
 //#include "neighbor_manager.h"
 #include "sample.h"
+#include "helpers.h"
 
 #include <string>
 #include <fstream>
@@ -32,8 +33,8 @@ private:
     std::ifstream scanfile;
     std::ifstream txfile;
     // diagnostics data files
-    std::ofstream outputscanfile = std::ofstream("specdata.csv");
-    std::ofstream outputtxfile = std::ofstream("txdata.csv");
+    std::ofstream outputscanfile = fileoutput ? std::ofstream("specdata.csv") : std::ofstream("/dev/null");
+    std::ofstream outputtxfile = fileoutput ? std::ofstream("txdata.csv") : std::ofstream("/dev/null");
     std::mutex file_lock;
 
     //TODO make both lists (+required changes) to not invalidate iterators

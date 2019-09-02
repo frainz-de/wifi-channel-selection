@@ -14,6 +14,7 @@
 volatile bool running = true;
 int abortpipe[2];
 int verbosity;
+bool fileoutput;
 
 // catch SIGINT to terminate gracefully
 void signalHandler(int sig) {
@@ -50,6 +51,8 @@ int main(int argc, char* argv[]) {
                 "Amount of output to produce", false, 1, "verbosity", cmd);
         TCLAP::SwitchArg traffic_arg("t", "traffic",
                 "Generate traffic using yes | ncat", cmd);
+        TCLAP::SwitchArg fileoutpt_arg("", "fileoutput",
+                "Write tx and spec data to csv files (do not use for longer operation)", cmd);
 
 
         cmd.parse(argc, argv);
@@ -60,6 +63,7 @@ int main(int argc, char* argv[]) {
         strategytype = strategy_arg.getValue();
         verbosity = verbosity_arg.getValue();
         generate_traffic = traffic_arg.getValue();
+        fileoutput = fileoutpt_arg.getValue();
 
     } catch (TCLAP::ArgException &e) {
         std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;

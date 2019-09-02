@@ -2,8 +2,9 @@
 
 #include <string>
 
-// global verbosity flag
+// global flags from command line arguments
 extern int verbosity;
+extern bool fileoutput;
 
 void rtrim(std::string &s);
 
