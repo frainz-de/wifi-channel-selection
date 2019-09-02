@@ -79,33 +79,23 @@ nlohmann::json Collector::get_tx(size_t max_size) {
 }
 
 double Collector::correlate(const std::vector<double>& txvector, long timeint) {
-    // TODO this stuff is probably not thread safe
-    // std::vector is being written to by other thread
     if(received_series.size() == 0) {
         std::cerr << "\ncannot correlate without data\n";
         return nan("");
     }
     auto tx_timestamp = std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(timeint));
-    //auto rindex = received_series.rbegin();
     auto index = --received_series.end();
     auto last = (*index)->timestamp;
 
     // search beginning of correlation interval
     for(; index != --received_series.begin() && (*index)->timestamp > tx_timestamp; --index);
-    //for(; rindex != received_series.rend() && (*rindex)->timestamp > tx_timestamp; ++rindex);
     if (index == --received_series.begin()) {
-        //throw(std::runtime_error("cannot start correlation"));
         std::cerr << "\n\033[31mnot enough data for correlation\033[0m\n";
         return nan("");
     }
 
-    //auto findex = rindex.base();
-    //auto findex = index;
     assert (index != received_series.begin());
     auto ftimestamp = (*index)->timestamp;
-
-    //auto bdistance = rindex - received_series.rend();
-    //auto fdistance = findex - received_series.begin();
 
     //auto tx_timestamp = timestamp;
     double rx_avg = 0;
