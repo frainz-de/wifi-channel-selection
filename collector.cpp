@@ -34,6 +34,7 @@ Collector::Collector(std::string& specinterface, std::string& netinterface) {
     }
 
     txpath = "/sys/class/net/" + netinterface + "/statistics/tx_bytes";
+    rxpath = "/sys/class/net/" + netinterface + "/statistics/rx_bytes";
 
     // try to open (virtual) file in binary mode
     scanfile.open(scanpath ,std::fstream::in | std::fstream::binary);
@@ -224,13 +225,21 @@ void Collector::run(volatile bool* running) {
         // print status
         if (verbosity >= 1) {
             std::cout << "\r" << time << ": collected " << sample_count
-                << " samples, freq: " << last_freq << ", rssi: " << avg_rssi << "    " << std::flush;
+                << " samples, freq: " << last_freq << ", rssi: " << avg_rssi
+                << " and " << net_count << " network samples"  << "    " << std::flush;
         }
         
         // try to open network statistics file
         std::ifstream txfile;
         txfile.open(txpath, std::fstream::in);
         if(txfile.fail()) {
+            std::cerr << "Failed to open network statistics file: " << strerror(errno) << std::endl;
+            throw std::runtime_error("");
+        }
+
+        std::ifstream rxfile;
+        txfile.open(rxpath, std::fstream::in);
+        if(rxfile.fail()) {
             std::cerr << "Failed to open network statistics file: " << strerror(errno) << std::endl;
             throw std::runtime_error("");
         }
@@ -251,10 +260,14 @@ void Collector::run(volatile bool* running) {
         // fill tx statistics vector
         long tx_bytes;
         txfile >> tx_bytes;
+        long rx_bytes;
+        rxfile >> rx_bytes;
+        long net_bytes = tx_bytes + rx_bytes;
         TxDataPoint txdatapoint(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()),
-                tx_bytes-last_tx_bytes);
-        last_tx_bytes = tx_bytes;
+                net_bytes-last_net_bytes);
+        last_net_bytes = net_bytes;
         tx_series.push_back(txdatapoint);
+        net_count++;
 
         // sleep for a millisecond, may not be necessary
         std::this_thread::sleep_for(std::chrono::milliseconds(1));

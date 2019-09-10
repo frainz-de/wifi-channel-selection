@@ -29,9 +29,11 @@ private:
     std::string netinterface;
     std::string phy; // = "phy1";
     std::string txpath;
+    std::string rxpath;
     std::string scanpath;
     std::ifstream scanfile;
-    std::ifstream txfile;
+    //std::ifstream txfile;
+    //std::ifstream rxfile;
     // diagnostics data files
     std::ofstream outputscanfile = fileoutput ? std::ofstream("specdata.csv") : std::ofstream("/dev/null");
     std::ofstream outputtxfile = fileoutput ? std::ofstream("txdata.csv") : std::ofstream("/dev/null");
@@ -45,9 +47,10 @@ private:
     //std::deque<TxDataPoint> tx_series;
     std::list<TxDataPoint> tx_series;
 
-    long last_tx_bytes;
+    long last_net_bytes;
     int sample_count = 0;
     float avg_rssi = 0;
+    int net_count = 0;
 
 public:
     Collector(std::string& specinterface, std::string& netinterface);
