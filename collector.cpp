@@ -86,7 +86,7 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     }
     auto tx_timestamp = std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(timeint));
     auto index = --received_series.end();
-    auto last = (*index)->timestamp;
+//    auto last = (*index)->timestamp;
 
     // search beginning of correlation interval
     for(; index != --received_series.begin() && (*index)->timestamp > tx_timestamp; --index);
@@ -96,7 +96,7 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     }
 
     assert (index != received_series.begin());
-    auto ftimestamp = (*index)->timestamp;
+//    auto ftimestamp = (*index)->timestamp;
 
     //auto tx_timestamp = timestamp;
     double rx_avg = 0;
