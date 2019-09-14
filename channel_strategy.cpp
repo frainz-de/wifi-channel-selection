@@ -124,6 +124,7 @@ void CorrelationChannelStrategy::do_something() {
         }
     }
 
+    // set networking channel to least used
     int least_used = get_least_used_channel();
     if (least_used != netchannel) {
         switch_channel(least_used);
