@@ -74,7 +74,7 @@ void ChannelStrategy::save_correlation(std::string address, double correlation,
 }
 
 void ChannelStrategy::record_channel(std::string address, int freq) {
-    channels[address] = freq;
+    neighbor_channel_map[address] = freq;
 }
 
 int ChannelStrategy::get_least_used_channel() {
@@ -85,7 +85,7 @@ int ChannelStrategy::get_least_used_channel() {
     }
 
     for (auto i = correlations.begin(); i != correlations.end(); i++) {
-        usage_map[channels[i->first]] += std::get<0>(i->second);
+        usage_map[neighbor_channel_map[i->first]] += std::get<0>(i->second);
     }
 
     auto least_used = std::min_element(usage_map.begin(), usage_map.end(),
@@ -99,7 +99,7 @@ int ChannelStrategy::get_oldest_scanchannel() {
     std::pair<std::string, std::tuple<double, std::chrono::time_point<Clock>>> oldest
         = {"", {0, std::chrono::time_point<Clock>::max()}};
 
-    for (auto i = channels.begin(); i != channels.end(); i++) {
+    for (auto i = neighbor_channel_map.begin(); i != neighbor_channel_map.end(); i++) {
         //if (std::get<1>(i->second) <= std::get<1>(oldest.second)) {
 
         if (std::get<1>(correlations[std::get<0>(*i)]) <= std::get<1>(std::get<1>(oldest))) {
@@ -112,7 +112,7 @@ int ChannelStrategy::get_oldest_scanchannel() {
 
     if (oldest.first != "") {
         //int channel = neighbor_manager->get_freq_from_neighbor(oldest.first);
-        return channels[oldest.first];
+        return neighbor_channel_map[oldest.first];
     } else {
         return 0;
     }
