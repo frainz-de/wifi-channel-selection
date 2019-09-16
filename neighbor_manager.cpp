@@ -30,6 +30,8 @@ NeighborManager::NeighborManager(const std::string& specinterface, const std::st
         channel_strategy = new RandomChannelStrategy(this, specinterface, netinterface);
     } else if (strategytype == "correlation") {
         channel_strategy = new CorrelationChannelStrategy(this, specinterface, netinterface);
+    } else if (strategytype == "simple-correlation") {
+        channel_strategy = new SimpleCorrelationChannelStrategy(this, specinterface, netinterface);
     } else {
         throw(std::invalid_argument("unknown channel strategy"));
     }

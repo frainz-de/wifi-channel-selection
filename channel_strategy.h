@@ -48,6 +48,13 @@ public:
 
 };
 
+class SimpleCorrelationChannelStrategy: public ChannelStrategy {
+public:
+    using ChannelStrategy::ChannelStrategy; // inherit constructors from base class
+    virtual void do_something();
+
+};
+
 class RandomChannelStrategy: public ChannelStrategy {
 public:
     using ChannelStrategy::ChannelStrategy; // inherit constructors from base class

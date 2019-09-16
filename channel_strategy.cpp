@@ -138,6 +138,22 @@ void CorrelationChannelStrategy::do_something() {
     }
 }
 
+void SimpleCorrelationChannelStrategy::do_something() {
+    //get neighbor with oldest / no correlation and change spec channel accordingly
+
+    int oldest_scanchannel = get_oldest_scanchannel();
+    if (oldest_scanchannel != specchannel && oldest_scanchannel != 0) {
+        set_spec_channel(oldest_scanchannel);
+    }
+
+    // set networking channel to least used
+    int least_used = get_least_used_channel();
+    if (least_used != netchannel) {
+        switch_channel(least_used);
+    }
+}
+
+
 void RandomChannelStrategy::do_something() {
     std::chrono::time_point now = std::chrono::system_clock::now();
     if (now - last_checked < std::chrono::seconds(5)) {
