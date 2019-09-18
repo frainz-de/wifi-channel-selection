@@ -28,24 +28,18 @@ private:
 
     std::string specinterface;
     std::string netinterface;
-    std::string phy; // = "phy1";
+    std::string phy;
     std::string txpath;
     std::string rxpath;
     std::string scanpath;
     std::ifstream scanfile;
-    //std::ifstream txfile;
-    //std::ifstream rxfile;
+
     // diagnostics data files
     std::ofstream outputscanfile = fileoutput ? std::ofstream("specdata.csv") : std::ofstream("/dev/null");
     std::ofstream outputtxfile = fileoutput ? std::ofstream("txdata.csv") : std::ofstream("/dev/null");
     std::mutex file_lock;
 
-    //TODO make both lists (+required changes) to not invalidate iterators
-    //std::vector<Sample*> received_series;
     std::list<Sample*> received_series;
-    //std::deque<Sample*> received_series;
-    //std::vector<TxDataPoint> tx_series;
-    //std::deque<TxDataPoint> tx_series;
     std::list<TxDataPoint> tx_series;
 
     long last_net_bytes;
