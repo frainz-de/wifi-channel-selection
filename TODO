@@ -1,0 +1,15 @@
+gerüst für kanalwechsel
+
+
+heuristik-basisklasse bauen
+    random: alle paar sekunden kanal wechseln
+
+app-wifi -> testcerts für ap-authentisierung
+ -> wpa_supplicant als client laufen lassen
+ -> dhclient
+ 
+gleiche ip auf allen aps
+ -> iperf
+
+
+AKF
