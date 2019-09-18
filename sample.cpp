@@ -5,7 +5,7 @@ Sample::Sample(size_t datalength) {
     timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
             */
-    timestamp = std::chrono::system_clock::now();
+    timestamp = std::chrono::high_resolution_clock::now();
     data = new uint8_t[datalength]; 
 }
 
