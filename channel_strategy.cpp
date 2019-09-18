@@ -44,9 +44,6 @@ void ChannelStrategy::set_net_channel(int freq) {
     } else {
         std::cerr << "\n\033[41mfailed to set channel to " + std::to_string(freq) + ": " + res + "\033[0m\n";
     }
-
-    auto rx_power = collector->get_rx_power(std::chrono::seconds(1));
-    channel_power_map[std::get<0>(rx_power)] = {std::get<1>(rx_power), std::get<2>(rx_power)};
 }
 
 void ChannelStrategy::set_spec_channel(int freq) {
@@ -79,9 +76,9 @@ void ChannelStrategy::save_correlation(std::string address, double correlation,
         + "\e[36m for neighbor \e[36m" + address + "\e[0m\n";
 }
 
-void ChannelStrategy::save_power_sample(int channel, double power,
-        std::chrono::time_point<Clock> timestamp) {
-    channel_power_map[channel] = {power, timestamp};
+void ChannelStrategy::save_power_sample() {
+    auto rx_power = collector->get_rx_power(std::chrono::seconds(1));
+    channel_power_map[std::get<0>(rx_power)] = {std::get<1>(rx_power), std::get<2>(rx_power)};
 }
 
 void ChannelStrategy::record_channel(std::string address, int freq) {
@@ -151,6 +148,11 @@ void CorrelationChannelStrategy::do_something() {
     if (least_used != netchannel) {
         set_net_channel(least_used);
     }
+
+    if (Clock::now() - last_spec_channel_switch > std::chrono::seconds(1)) {
+        save_power_sample();
+    }
+
 }
 
 void SimpleCorrelationChannelStrategy::do_something() {

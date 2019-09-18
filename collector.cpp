@@ -193,10 +193,12 @@ std::tuple<int, double, std::chrono::time_point<Clock>> Collector::get_rx_power(
     int channel = 0;
     auto begintime = Clock::now() - duration;
 
-    for (auto index = received_series.end()--; (*index)->timestamp > begintime; index--) {
+    auto checkindex = received_series.end()--;
+
+    for (auto index = --received_series.end(); index != received_series.begin() && (*index)->timestamp > begintime; index--) {
         power += (*index)->rssi;
         count++;
-        assert(channel == (*index)->center_freq); //TODO replace by proper error handling
+        assert(channel == 0 || channel == (*index)->center_freq); //TODO replace by proper error handling
         channel = (*index)->center_freq;
     }
     return {channel, power/count, begintime};

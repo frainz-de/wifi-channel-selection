@@ -21,7 +21,7 @@ public:
     int get_specchannel();
     int get_netchannel();
     void save_correlation(std::string address, double correlation, std::chrono::time_point<Clock> timestamp);
-    void save_power_sample(int channel, double power, std::chrono::time_point<Clock> timestamp);
+    void save_power_sample();
     void record_channel(std::string address, int freq);
     void set_collector(Collector* collector);
 
@@ -36,9 +36,9 @@ protected:
     int netchannel;
 
     void set_net_channel(int freq);
-    std::chrono::time_point<Clock> last_net_channel_switch;
+    std::chrono::time_point<Clock> last_net_channel_switch = Clock::now();
     void set_spec_channel(int freq);
-    std::chrono::time_point<Clock> last_spec_channel_switch;
+    std::chrono::time_point<Clock> last_spec_channel_switch = Clock::now();
     int get_least_used_channel();
     int get_oldest_scanchannel();
 
