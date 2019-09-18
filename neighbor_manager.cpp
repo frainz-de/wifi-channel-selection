@@ -55,6 +55,7 @@ void NeighborManager::scanandsend() {
 
 void NeighborManager::set_collector(Collector* collector) {
     this->collector = collector;
+    channel_strategy->set_collector(collector);
 }
 
 void NeighborManager::scan() {

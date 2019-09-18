@@ -73,8 +73,17 @@ void ChannelStrategy::save_correlation(std::string address, double correlation,
         + "\e[36m for neighbor \e[36m" + address + "\e[0m\n";
 }
 
+void ChannelStrategy::save_power_sample(int channel, double power,
+        std::chrono::time_point<Clock> timestamp) {
+    channel_power_map[channel] = {power, timestamp};
+}
+
 void ChannelStrategy::record_channel(std::string address, int freq) {
     neighbor_channel_map[address] = freq;
+}
+
+void ChannelStrategy::set_collector(Collector* collector) {
+    this->collector = collector;
 }
 
 int ChannelStrategy::get_least_used_channel() {
