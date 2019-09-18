@@ -1,6 +1,7 @@
 #include "channel_strategy.h"
 #include "neighbor_manager.h"
 #include "helpers.h"
+#include "collector.h"
 
 #include <chrono>
 #include <thread>
@@ -29,7 +30,7 @@ ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::s
     }
 }
 
-void ChannelStrategy::switch_channel(int freq) {
+void ChannelStrategy::set_net_channel(int freq) {
     int netchannel_local = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
     assert(netchannel == netchannel_local);
 
@@ -38,19 +39,24 @@ void ChannelStrategy::switch_channel(int freq) {
     if (res == "OK") {
         std::cout << "\n\033[42msuccessfully set channel to " + std::to_string(freq) + "\033[0m\n";
         netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
+        last_net_channel_switch = Clock::now();
         assert(netchannel == freq);
     } else {
         std::cerr << "\n\033[41mfailed to set channel to " + std::to_string(freq) + ": " + res + "\033[0m\n";
     }
+
+    auto rx_power = collector->get_rx_power(std::chrono::seconds(1));
+    channel_power_map[std::get<0>(rx_power)] = {std::get<1>(rx_power), std::get<2>(rx_power)};
 }
 
 void ChannelStrategy::set_spec_channel(int freq) {
     //std::string res = exec("iw dev wlp1s0 set freq " + std::to_string(freq));
     auto res = WEXITSTATUS(std::system(("iw dev " + specinterface + " set freq " + std::to_string(freq)).c_str()));
-    specchannel = stoi(exec("iw dev " + specinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
     switch (res) {
     case 0:
         std::cout << "\n\033[32msuccessfully set scan channel to " + std::to_string(freq) + "\033[0m\n";
+        specchannel = stoi(exec("iw dev " + specinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
+        last_spec_channel_switch = Clock::now();
         break;
     case 240:
         std::cerr << "\n\033[31mfailed to set scan channel to " + std::to_string(freq) + ": device busy \033[0m\n";
@@ -143,7 +149,7 @@ void CorrelationChannelStrategy::do_something() {
     // set networking channel to least used
     int least_used = get_least_used_channel();
     if (least_used != netchannel) {
-        switch_channel(least_used);
+        set_net_channel(least_used);
     }
 }
 
@@ -158,7 +164,7 @@ void SimpleCorrelationChannelStrategy::do_something() {
     // set networking channel to least used
     int least_used = get_least_used_channel();
     if (least_used != netchannel) {
-        switch_channel(least_used);
+        set_net_channel(least_used);
     }
 }
 
@@ -176,6 +182,6 @@ void RandomChannelStrategy::do_something() {
     std::uniform_int_distribution<int> dist(0, possible_channels.size() - 1);
 
     int channel = possible_channels[dist(engine)];
-    switch_channel(channel);
+    set_net_channel(channel);
 
 }

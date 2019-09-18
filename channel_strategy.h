@@ -35,8 +35,10 @@ protected:
     int specchannel;
     int netchannel;
 
-    void switch_channel(int freq);
+    void set_net_channel(int freq);
+    std::chrono::time_point<Clock> last_net_channel_switch;
     void set_spec_channel(int freq);
+    std::chrono::time_point<Clock> last_spec_channel_switch;
     int get_least_used_channel();
     int get_oldest_scanchannel();
 
