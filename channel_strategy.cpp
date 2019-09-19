@@ -106,24 +106,19 @@ int ChannelStrategy::get_least_used_channel() {
     return least_used->first;
 }
 
-int ChannelStrategy::get_oldest_scanchannel() {
+int ChannelStrategy::get_oldest_neighbor_scanchannel() {
     //get neighbor with oldest / no correlation and change spec channel accordingly
     std::pair<std::string, std::tuple<double, std::chrono::time_point<Clock>>> oldest
         = {"", {0, std::chrono::time_point<Clock>::max()}};
 
     for (auto i = neighbor_channel_map.begin(); i != neighbor_channel_map.end(); i++) {
-        //if (std::get<1>(i->second) <= std::get<1>(oldest.second)) {
-
         if (std::get<1>(correlations[std::get<0>(*i)]) <= std::get<1>(std::get<1>(oldest))) {
-            //oldest = correlations[std::get<0>(*i)];
-            //oldest = *i;
             oldest.first = std::get<0>(*i);
             oldest.second = correlations[std::get<0>(*i)];
         }
     }
 
     if (oldest.first != "") {
-        //int channel = neighbor_manager->get_freq_from_neighbor(oldest.first);
         return neighbor_channel_map[oldest.first];
     } else {
         return 0;
@@ -138,7 +133,7 @@ int ChannelStrategy::get_netchannel() {return netchannel;}
 void CorrelationChannelStrategy::do_something() {
     //get neighbor with oldest / no correlation and change spec channel accordingly
 
-    int oldest_scanchannel = get_oldest_scanchannel();
+    int oldest_scanchannel = get_oldest_neighbor_scanchannel();
     if (oldest_scanchannel != specchannel && oldest_scanchannel != 0) {
         set_spec_channel(oldest_scanchannel);
     }
@@ -158,7 +153,7 @@ void CorrelationChannelStrategy::do_something() {
 void SimpleCorrelationChannelStrategy::do_something() {
     //get neighbor with oldest / no correlation and change spec channel accordingly
 
-    int oldest_scanchannel = get_oldest_scanchannel();
+    int oldest_scanchannel = get_oldest_neighbor_scanchannel();
     if (oldest_scanchannel != specchannel && oldest_scanchannel != 0) {
         set_spec_channel(oldest_scanchannel);
     }
