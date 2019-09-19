@@ -41,6 +41,7 @@ protected:
     std::chrono::time_point<Clock> last_spec_channel_switch = Clock::now();
     int get_least_used_channel();
     int get_oldest_neighbor_scanchannel();
+    int get_oldest_power_scanchannel();
 
     // map of address and tuple of correlation and timestamp
     std::map<std::string, std::tuple<double, std::chrono::time_point<Clock>>> correlations;

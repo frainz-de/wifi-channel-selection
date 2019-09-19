@@ -28,6 +28,12 @@ ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::s
     } else {
         std::cerr << "\n\e[31mcould not deduce network channel\e[0m\n";
     }
+
+    // initialize channel_power_map
+
+    for (auto i = possible_channels.begin(); i != possible_channels.end(); i++) {
+        channel_power_map[*i] = {0, std::chrono::time_point<Clock>::min()};
+    }
 }
 
 void ChannelStrategy::set_net_channel(int freq) {
@@ -77,8 +83,12 @@ void ChannelStrategy::save_correlation(std::string address, double correlation,
 }
 
 void ChannelStrategy::save_power_sample() {
+    try {
     auto rx_power = collector->get_rx_power(std::chrono::seconds(1));
     channel_power_map[std::get<0>(rx_power)] = {std::get<1>(rx_power), std::get<2>(rx_power)};
+    } catch (std::runtime_error& e) {
+        std::cerr << "\n" + std::string(e.what()) + "\n";
+    }
 }
 
 void ChannelStrategy::record_channel(std::string address, int freq) {
@@ -117,13 +127,26 @@ int ChannelStrategy::get_oldest_neighbor_scanchannel() {
             oldest.second = correlations[std::get<0>(*i)];
         }
     }
-
     if (oldest.first != "") {
         return neighbor_channel_map[oldest.first];
     } else {
         return 0;
     }
+}
 
+int ChannelStrategy::get_oldest_power_scanchannel() {
+    std::pair<int, std::tuple<double, std::chrono::time_point<Clock>>> oldest
+        = {0, {0, std::chrono::time_point<Clock>::max()}};
+
+    for (auto i = channel_power_map.begin(); i != channel_power_map.end(); i++) {
+        if (std::get<1>(std::get<1>(*i)) <= std::get<1>(std::get<1>(oldest))) {
+            oldest = *i;
+        }
+    }
+
+    auto size = channel_power_map.size();
+
+    return oldest.first;
 }
 
 int ChannelStrategy::get_specchannel() {return specchannel;}
@@ -133,7 +156,7 @@ int ChannelStrategy::get_netchannel() {return netchannel;}
 void CorrelationChannelStrategy::do_something() {
     //get neighbor with oldest / no correlation and change spec channel accordingly
 
-    int oldest_scanchannel = get_oldest_neighbor_scanchannel();
+    int oldest_scanchannel = get_oldest_power_scanchannel();
     if (oldest_scanchannel != specchannel && oldest_scanchannel != 0) {
         set_spec_channel(oldest_scanchannel);
     }

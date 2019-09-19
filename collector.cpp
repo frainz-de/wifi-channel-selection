@@ -191,16 +191,22 @@ std::tuple<int, double, std::chrono::time_point<Clock>> Collector::get_rx_power(
     double power = 0;
     int count = 0;
     int channel = 0;
-    auto begintime = Clock::now() - duration;
+    auto now = Clock::now();
+    auto begintime = now - duration;
 
-    auto checkindex = received_series.end()--;
+    if (received_series.size() == 0) {
+        throw std::runtime_error("no spec data to get power average");
+    }
 
     for (auto index = --received_series.end(); index != received_series.begin() && (*index)->timestamp > begintime; index--) {
         power += (*index)->rssi;
         count++;
-        assert(channel == 0 || channel == (*index)->center_freq); //TODO replace by proper error handling
+        if (!(channel == 0 || channel == (*index)->center_freq)) { //TODO replace by proper error handling
+            throw std::runtime_error("channel switch in sampling interval");
+        }
         channel = (*index)->center_freq;
     }
+    assert(count != 0);
     return {channel, power/count, begintime};
 
 }
