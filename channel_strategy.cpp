@@ -118,26 +118,37 @@ int SimpleCorrelationChannelStrategy::get_least_used_channel() {
 
 int CorrelationChannelStrategy::pick_channel() {
     std::map<int, double> usage_map; //channel, usage
-    //initialize
+    // initialize
     for (auto i = possible_channels.begin(); i != possible_channels.end(); i++) {
         usage_map[*i] = 0;
     }
 
+    // add correlations to usage map
     for (auto i = correlations.begin(); i != correlations.end(); i++) {
         usage_map[neighbor_channel_map[i->first]] += std::get<0>(i->second);
     }
+    // add power measurements to usage map
     for (auto i = channel_power_map.begin(); i != channel_power_map.end(); i++) {
         usage_map[i->first] += std::get<0>(i->second);
     }
 
-    //find least used channel
+    // normalize usage map
+    double sum = 0;
+    for (auto i = usage_map.begin(); i != usage_map.end(); i++) {
+        sum += i->second;
+    }
+    for (auto i = usage_map.begin(); i != usage_map.end(); i++) {
+        i->second /= sum;
+    }
+
+    // find least used channel
     auto least_used = std::min_element(usage_map.begin(), usage_map.end(),
             [](const auto& l, const auto& r) -> bool {return std::abs(l.second) < std::abs(r.second);});
     return least_used->first;
 }
 
 int ChannelStrategy::get_oldest_neighbor_scanchannel() {
-    //get neighbor with oldest / no correlation and change spec channel accordingly
+    // get neighbor with oldest / no correlation and change spec channel accordingly
     std::pair<std::string, std::tuple<double, std::chrono::time_point<Clock>>> oldest
         = {"", {0, std::chrono::time_point<Clock>::max()}};
 
