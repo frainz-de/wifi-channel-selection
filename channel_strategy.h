@@ -29,7 +29,7 @@ protected:
     NeighborManager* neighbor_manager;
     Collector* collector;
     //std::vector<int> possible_channels = {5170,5190,5230,5270,5310,5510,5550,5590,5630,5670,5710,5755,5795};
-    std::vector<int> possible_channels = {5180,5200,5220,5240,5745,5765,5785,5805,5825};
+    const std::vector<int> possible_channels = {5180,5200,5220,5240,5745,5765,5785,5805,5825};
     std::string specinterface;
     std::string netinterface;
     int specchannel;
@@ -39,7 +39,6 @@ protected:
     std::chrono::time_point<Clock> last_net_channel_switch = Clock::now();
     void set_spec_channel(int freq);
     std::chrono::time_point<Clock> last_spec_channel_switch = Clock::now();
-    int get_least_used_channel();
     int get_oldest_neighbor_scanchannel();
     int get_oldest_power_scanchannel();
 
@@ -54,14 +53,16 @@ class CorrelationChannelStrategy: public ChannelStrategy {
 public:
     using ChannelStrategy::ChannelStrategy; // inherit constructors from base class
     virtual void do_something();
-
+private:
+    int pick_channel();
 };
 
 class SimpleCorrelationChannelStrategy: public ChannelStrategy {
 public:
     using ChannelStrategy::ChannelStrategy; // inherit constructors from base class
-    virtual void do_something();
-
+    void do_something();
+private:
+    virtual int get_least_used_channel();
 };
 
 class RandomChannelStrategy: public ChannelStrategy {

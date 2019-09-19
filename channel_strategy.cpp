@@ -99,7 +99,7 @@ void ChannelStrategy::set_collector(Collector* collector) {
     this->collector = collector;
 }
 
-int ChannelStrategy::get_least_used_channel() {
+int SimpleCorrelationChannelStrategy::get_least_used_channel() {
     std::map<int, double> usage_map; //channel, usage
     //initialize
     for (auto i = possible_channels.begin(); i != possible_channels.end(); i++) {
@@ -113,6 +113,26 @@ int ChannelStrategy::get_least_used_channel() {
     auto least_used = std::min_element(usage_map.begin(), usage_map.end(),
             [](const auto& l, const auto& r) -> bool {return std::abs(l.second) < std::abs(r.second);});
 
+    return least_used->first;
+}
+
+int CorrelationChannelStrategy::pick_channel() {
+    std::map<int, double> usage_map; //channel, usage
+    //initialize
+    for (auto i = possible_channels.begin(); i != possible_channels.end(); i++) {
+        usage_map[*i] = 0;
+    }
+
+    for (auto i = correlations.begin(); i != correlations.end(); i++) {
+        usage_map[neighbor_channel_map[i->first]] += std::get<0>(i->second);
+    }
+    for (auto i = channel_power_map.begin(); i != channel_power_map.end(); i++) {
+        usage_map[i->first] += std::get<0>(i->second);
+    }
+
+    //find least used channel
+    auto least_used = std::min_element(usage_map.begin(), usage_map.end(),
+            [](const auto& l, const auto& r) -> bool {return std::abs(l.second) < std::abs(r.second);});
     return least_used->first;
 }
 
@@ -162,15 +182,14 @@ void CorrelationChannelStrategy::do_something() {
     }
 
     // set networking channel to least used
-    int least_used = get_least_used_channel();
-    if (least_used != netchannel) {
-        set_net_channel(least_used);
+    int new_channel = pick_channel();
+    if (new_channel != netchannel) {
+        set_net_channel(new_channel);
     }
 
     if (Clock::now() - last_spec_channel_switch > std::chrono::seconds(1)) {
         save_power_sample();
     }
-
 }
 
 void SimpleCorrelationChannelStrategy::do_something() {
