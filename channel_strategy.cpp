@@ -117,34 +117,44 @@ int SimpleCorrelationChannelStrategy::get_least_used_channel() {
 }
 
 int CorrelationChannelStrategy::pick_channel() {
-    std::map<int, double> usage_map; //channel, usage
+    std::map<int, double> channel_probabilities; //channel, usage
     // initialize
     for (auto i = possible_channels.begin(); i != possible_channels.end(); i++) {
-        usage_map[*i] = 0;
+        channel_probabilities[*i] = 1.0d / possible_channels.size();
     }
 
-    // add correlations to usage map
+    // apply penalties for correlations
+    // assume values from 0 to 1, maximum penalty: 20%
     for (auto i = correlations.begin(); i != correlations.end(); i++) {
-        usage_map[neighbor_channel_map[i->first]] += std::get<0>(i->second);
+        channel_probabilities[neighbor_channel_map[i->first]] *= 1 - std::get<0>(i->second)*0.2;
     }
-    // add power measurements to usage map
+    // apply penalties for received power
+    // assume values from 0 to 20, maximum penalty: 20%
     for (auto i = channel_power_map.begin(); i != channel_power_map.end(); i++) {
-        usage_map[i->first] += std::get<0>(i->second);
+        channel_probabilities[i->first] *= 1 - std::get<0>(i->second)*0.05*0.2;
     }
 
-    // normalize usage map
+    // normalize
     double sum = 0;
-    for (auto i = usage_map.begin(); i != usage_map.end(); i++) {
+    for (auto i = channel_probabilities.begin(); i != channel_probabilities.end(); i++) {
         sum += i->second;
     }
-    for (auto i = usage_map.begin(); i != usage_map.end(); i++) {
+    for (auto i = channel_probabilities.begin(); i != channel_probabilities.end(); i++) {
         i->second /= sum;
     }
 
-    // find least used channel
-    auto least_used = std::min_element(usage_map.begin(), usage_map.end(),
+    //double proper_sum = 0; //should be 1 now
+    //for (auto& element : channel_probabilities) {
+    //    proper_sum += element.second;
+    //}
+
+    // preliminary hack: use channel with highest probability
+    auto least_used = std::max_element(channel_probabilities.begin(), channel_probabilities.end(),
             [](const auto& l, const auto& r) -> bool {return std::abs(l.second) < std::abs(r.second);});
+
     return least_used->first;
+
+    //TODO return random channel, weighted by usage map
 }
 
 int ChannelStrategy::get_oldest_neighbor_scanchannel() {
