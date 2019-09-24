@@ -148,13 +148,25 @@ int CorrelationChannelStrategy::pick_channel() {
     //    proper_sum += element.second;
     //}
 
+    // pick channel by probabilities in map
+    std::random_device random_device;
+    std::mt19937 engine{random_device()};
+    std::uniform_real_distribution<double> dist(0, 1);
+    double random_number = dist(engine);
+
+    int channel = 0;
+    for (auto i = channel_probabilities.begin(); i != channel_probabilities.end() && random_number > 0; i++) {
+        random_number -= i->second;
+        channel = i->first;
+    }
+
+    return channel;
+
     // preliminary hack: use channel with highest probability
     auto least_used = std::max_element(channel_probabilities.begin(), channel_probabilities.end(),
             [](const auto& l, const auto& r) -> bool {return std::abs(l.second) < std::abs(r.second);});
 
     return least_used->first;
-
-    //TODO return random channel, weighted by usage map
 }
 
 int ChannelStrategy::get_oldest_neighbor_scanchannel() {
