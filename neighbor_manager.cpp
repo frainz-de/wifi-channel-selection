@@ -140,11 +140,6 @@ void NeighborManager::send_tx() {
     }
 }
 
-
-void NeighborManager::switch_channel(int channel) {
-    std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 3 " + std::to_string(channel));
-}
-
 //int NeighborManager::get_freq_from_neighbor(std::string address) {
 //    return channels.at(address);
 //}

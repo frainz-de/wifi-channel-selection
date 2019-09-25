@@ -29,7 +29,6 @@ private:
     void scan();
     void send_neighbors();
     void send_msg(const std::string address, const std::string msg);
-    void switch_channel(int channel);
     void receive_message(int sockfd);
 
     Collector* collector;
