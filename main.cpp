@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
                 "Amount of output to produce", false, 1, "verbosity", cmd);
         TCLAP::SwitchArg traffic_arg("t", "traffic",
                 "Generate traffic using yes | ncat", cmd);
-        TCLAP::SwitchArg fileoutpt_arg("", "fileoutput",
+        TCLAP::SwitchArg fileoutput_arg("", "fileoutput",
                 "Write tx and spec data to csv files (do not use for longer operation)", cmd);
 
 
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
         strategytype = strategy_arg.getValue();
         verbosity = verbosity_arg.getValue();
         generate_traffic = traffic_arg.getValue();
-        fileoutput = fileoutpt_arg.getValue();
+        fileoutput = fileoutput_arg.getValue();
 
     } catch (TCLAP::ArgException &e) {
         std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
