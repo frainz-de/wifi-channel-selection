@@ -80,6 +80,9 @@ nlohmann::json Collector::get_tx(size_t max_size) {
 }
 
 double Collector::correlate(const std::vector<double>& txvector, long timeint) {
+    // note: rx is used here for data from the spec interface
+    // tx is used to denote networktraffic from the other AP
+
     if(received_series.size() == 0) {
         std::cerr << "\ncannot correlate without data\n";
         return nan("");
