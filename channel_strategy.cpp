@@ -38,15 +38,17 @@ ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::s
 
 void ChannelStrategy::set_net_channel(int freq) {
     int netchannel_local = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
-    assert(netchannel == netchannel_local);
+    if (netchannel != netchannel_local) {
+        return;
+    }
 
-    std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 1 " + std::to_string(freq));
+    std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 3 " + std::to_string(freq));
     rtrim(res);
     if (res == "OK") {
         std::cout << "\n\033[42msuccessfully set channel to " + std::to_string(freq) + "\033[0m\n";
         netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
         last_net_channel_switch = Clock::now();
-        assert(netchannel == freq);
+        //assert(netchannel == freq);
     } else {
         std::cerr << "\n\033[41mfailed to set channel to " + std::to_string(freq) + ": " + res + "\033[0m\n";
     }
@@ -207,6 +209,8 @@ int ChannelStrategy::get_netchannel() {return netchannel;}
 
 
 void CorrelationChannelStrategy::do_something() {
+    netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
+
     //get neighbor with oldest / no correlation and change spec channel accordingly
 
     int oldest_scanchannel = get_oldest_power_scanchannel();
@@ -226,6 +230,8 @@ void CorrelationChannelStrategy::do_something() {
 }
 
 void SimpleCorrelationChannelStrategy::do_something() {
+    netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
+
     //get neighbor with oldest / no correlation and change spec channel accordingly
 
     int oldest_scanchannel = get_oldest_neighbor_scanchannel();
@@ -242,6 +248,8 @@ void SimpleCorrelationChannelStrategy::do_something() {
 
 
 void RandomChannelStrategy::do_something() {
+    netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
+
     std::chrono::time_point now = std::chrono::system_clock::now();
     if (now - last_checked < std::chrono::seconds(5)) {
         return;
