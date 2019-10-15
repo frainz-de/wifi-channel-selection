@@ -15,6 +15,9 @@ extern "C" {
 #include <sstream>
 #include <nlohmann/json.hpp>
 #include <signal.h>
+#include <sys/timerfd.h>
+#include <sys/poll.h>
+#include <unistd.h>
 
 Collector::Collector(std::string& specinterface, std::string& netinterface) {
     
@@ -218,6 +221,15 @@ void Collector::run(volatile bool* running) {
 
     seek_to_header();
 
+    int timerfd = timerfd_create(CLOCK_REALTIME, 0);
+    itimerspec spec = {{.tv_nsec=1000000}, {.tv_nsec=1}};
+    assert(timerfd_settime(timerfd, 0, &spec, 0) >= 0);
+
+    struct pollfd pfds[1];
+    pfds[0].fd = timerfd;
+    pfds[0].events = POLLIN;
+
+
     while (*running) {
         // read available samples
         scanfile.peek();
@@ -251,9 +263,9 @@ void Collector::run(volatile bool* running) {
         auto last_freq = received_series.back() ? received_series.back()->center_freq : 0;
         // print status
         if (verbosity >= 1) {
-            std::cout << "\r" << time << ": collected " << sample_count
-                << " samples, freq: " << last_freq << ", rssi: " << avg_rssi
-                << " and " << net_count << " network samples"  << "    " << std::flush;
+            std::cout << "\r" << time << ": collected " << net_count << " network samples, "
+                << sample_count << " samples, freq: " << last_freq << ", rssi: " << avg_rssi
+                << "            " << std::flush;
         }
         
         // try to open network statistics file
@@ -297,7 +309,13 @@ void Collector::run(volatile bool* running) {
         net_count++;
 
         // sleep for a millisecond, may not be necessary
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+        // use timerfd instead of sleeping for better precision
+        poll(pfds, 1, -1);
+        int timersElapsed = 0;
+        read(pfds[0].fd, &timersElapsed, 8);
+
         scanfile.clear();
     }
 
