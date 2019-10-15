@@ -42,7 +42,8 @@ void ChannelStrategy::set_net_channel(int freq) {
         return;
     }
 
-    std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 3 " + std::to_string(freq) + " ht20");
+    std::string res = exec("hostapd_cli -i " + netinterface + " chan_switch 3 " + std::to_string(freq)
+            + " center_freq1=" + std::to_string(freq) + " bandwidth=20 vht");
     rtrim(res);
     if (res == "OK") {
         std::cout << "\n\033[42msuccessfully set channel to " + std::to_string(freq) + "\033[0m\n";
