@@ -267,3 +267,5 @@ void RandomChannelStrategy::do_something() {
     set_net_channel(channel);
 
 }
+
+void StaticChannelStrategy::do_something() {}

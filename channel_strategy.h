@@ -73,3 +73,9 @@ public:
 private:
     std::chrono::time_point<Clock> last_checked;
 };
+
+class StaticChannelStrategy: public ChannelStrategy {
+public:
+    using ChannelStrategy::ChannelStrategy; // inherit constructors from base class
+    virtual void do_something();
+};
