@@ -283,18 +283,6 @@ void Collector::run(volatile bool* running) {
             throw std::runtime_error("");
         }
         
-        /*
-        // txfile.seekg(0, std::ios_base::beg); // seek to the beginning to get a new value
-        txfile.seekg(0); // seek to the beginning to get a new value
-        if(txfile.fail()) {
-            std::cerr << "\nFailed reading network statistics: " << strerror(errno) << std::endl;
-        }
-        */
-        //std::string tx_bytes_string;
-        //std::getline(txfile, tx_bytes_string);
-        //txfile >> tx_bytes_string;
-        //std::getline(txfile, tx_bytes_string);
-        //long tx_bytes = std::stol(tx_bytes_string); // convert string to long
 
         // fill tx statistics vector
         long tx_bytes;
@@ -318,27 +306,6 @@ void Collector::run(volatile bool* running) {
 
         scanfile.clear();
     }
-
-    // write last second into json
-    /*
-    auto now = std::chrono::high_resolution_clock::now();
-    auto current_time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
-    auto begin_time = current_time - std::chrono::seconds(1);
-    //auto index = std::lower_bound(tx_series.begin(), tx_series.end(), [&begin_time](const auto& s)
-    //        {return std::get<0>(s) <= begin_time; });
-    auto json = nlohmann::json::array();
-    //json.push_back("asdf");
-    for (auto i = tx_series.size()-500; i < tx_series.size(); i++) {
-        json.push_back(std::get<1>(tx_series.at(i)));
-    }
-    auto dump = json.dump();
-    auto ubjson = nlohmann::json::to_ubjson(json);
-    //std::cout << ubjson.size() << std::endl;
-    //auto back = nlohmann::json::from_ubjson(ubjson);
-    //auto backdump = back.dump();
-    //neighbor_manager->send_tx(json);
-    */
-
 
 
     std::cout << "\ncaught SIGINT, writing data to disc\n";
