@@ -92,7 +92,6 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     }
     auto tx_timestamp = std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(timeint));
     auto index = --received_series.end();
-//    auto last = (*index)->timestamp;
 
     // search beginning of correlation interval
     for(; index != --received_series.begin() && (*index)->timestamp > tx_timestamp; --index);
@@ -102,9 +101,7 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     }
 
     assert (index != received_series.begin());
-//    auto ftimestamp = (*index)->timestamp;
 
-    //auto tx_timestamp = timestamp;
     double rx_avg = 0;
     double tx_avg = 0;
     int interval = 0;
@@ -240,18 +237,13 @@ void Collector::run(volatile bool* running) {
 
         //TODO running average of rssi
         if(sample_count > 1) {
-            //auto& previous = received_series.at(received_series.size()-2);
             auto previous = *std::prev(received_series.end(), 2);
-            //auto& current = received_series.at(received_series.size()-1);
             auto current = received_series.back();
             auto delta_t = current->timestamp - previous->timestamp;
             std::chrono::milliseconds tau(1000);
             //double alpha = delta_t / tau;
             double alpha = 0.1;
-            //std::cout << alpha << std::endl;
-            //avg_rssi += alpha * (current->rssi - avg_rssi);
             avg_rssi = (1-alpha)*avg_rssi + alpha*current->rssi;
-            //avg_rssi = current->rssi;
         }
 
         // get current time
@@ -337,7 +329,6 @@ void Collector::readSample(std::ifstream &scanfile, decltype(received_series) &r
     auto sample = new fft_sample_ath10k;
     scanfile.read((char*)&sample->tlv, sizeof(fft_sample_tlv)); //read TLV header
     if(sample->tlv.type != ATH_FFT_SAMPLE_ATH10K) {
-        //throw std::runtime_error("Wrong sample type, only ath10k samples are supportet atm\n");
         seek_to_header();
         return;
     }
@@ -349,7 +340,6 @@ void Collector::readSample(std::ifstream &scanfile, decltype(received_series) &r
     auto datalength = be16toh(sample->tlv.length) - sizeof(fft_sample_ath10k) + sizeof(fft_sample_tlv);
     auto readSample = new Sample(datalength);
 
-//    auto data = new uint8_t[datalength];
     scanfile.read((char*) readSample->data, datalength);
 
     // calculate signal strength
