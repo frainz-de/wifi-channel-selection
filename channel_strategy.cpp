@@ -137,6 +137,8 @@ int CorrelationChannelStrategy::pick_channel() {
     for (auto i = channel_power_map.begin(); i != channel_power_map.end(); i++) {
         channel_probabilities[i->first] *= 1 - std::get<0>(i->second)*0.05*0.2;
     }
+    // apply gain for current channel to add inertia: 20%
+    channel_probabilities[netchannel] *= 1.2d;
 
     // normalize
     double sum = 0;
@@ -151,6 +153,8 @@ int CorrelationChannelStrategy::pick_channel() {
     //for (auto& element : channel_probabilities) {
     //    proper_sum += element.second;
     //}
+
+    //TODO: priorize current channel to add inertia
 
     // pick channel by probabilities in map
     std::random_device random_device;
@@ -195,6 +199,7 @@ int ChannelStrategy::get_oldest_power_scanchannel() {
     std::pair<int, std::tuple<double, std::chrono::time_point<Clock>>> oldest
         = {0, {0, std::chrono::time_point<Clock>::max()}};
 
+    //TODO: include and priorize correlation channel info
     for (auto i = channel_power_map.begin(); i != channel_power_map.end(); i++) {
         if (std::get<1>(std::get<1>(*i)) <= std::get<1>(std::get<1>(oldest))) {
             oldest = *i;
