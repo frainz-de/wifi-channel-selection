@@ -15,7 +15,7 @@
 #include <mutex>
 #include <nlohmann/json.hpp>
 
-using DataPoint = std::tuple<int, double>;
+// using DataPoint = std::tuple<int, double>;
 using TxDataPoint = std::tuple<std::chrono::time_point<std::chrono::high_resolution_clock>, long>; // timestamp, value
 using Clock = std::chrono::high_resolution_clock;
 class NeighborManager;
@@ -26,8 +26,8 @@ private:
 
     NeighborManager* neighbor_manager;
 
-    std::string specinterface;
-    std::string netinterface;
+//    std::string specinterface;
+//    std::string netinterface;
     std::string phy;
     std::string txpath;
     std::string rxpath;
@@ -44,7 +44,6 @@ private:
 
     long last_net_bytes;
     int sample_count = 0;
-    float avg_rssi = 0;
     int net_count = 0;
 
 public:

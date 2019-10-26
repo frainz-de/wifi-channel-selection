@@ -94,7 +94,10 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     auto index = --received_series.end();
 
     // search beginning of correlation interval
+    // move index forward, until the timestamps about match
     for(; index != --received_series.begin() && (*index)->timestamp > tx_timestamp; --index);
+
+    // we hit the beginning of the sample list => abort
     if (index == --received_series.begin()) {
         std::cerr << "\n\033[31mnot enough data for correlation\033[0m\n";
         return nan("");
@@ -216,6 +219,9 @@ std::tuple<int, double, std::chrono::time_point<Clock>> Collector::get_rx_power(
 
 void Collector::run(volatile bool* running) {
 
+    float avg_rssi = 0;
+    float avg_tx = 0;
+
     seek_to_header();
 
     int timerfd = timerfd_create(CLOCK_REALTIME, 0);
@@ -240,13 +246,22 @@ void Collector::run(volatile bool* running) {
             auto previous = *std::prev(received_series.end(), 2);
             auto current = received_series.back();
             auto delta_t = current->timestamp - previous->timestamp;
-            std::chrono::milliseconds tau(1000);
+            //std::chrono::milliseconds tau(1000);
             //double alpha = delta_t / tau;
             double alpha = 0.1;
             avg_rssi = (1-alpha)*avg_rssi + alpha*current->rssi;
+
         }
 
-        // get current time
+        // running average of tx
+        if (!tx_series.empty()) {
+
+            double alpha = 0.1;
+            avg_tx = (1-alpha)*avg_tx + alpha*std::get<1>(tx_series.back());
+
+        }
+
+        // get current time for status print
         auto now = std::chrono::high_resolution_clock::now();
         auto in_time_t = std::chrono::system_clock::to_time_t(now);
         std::string time = std::ctime(&in_time_t);
@@ -256,8 +271,8 @@ void Collector::run(volatile bool* running) {
         // print status
         if (verbosity >= 1) {
             std::cout << "\r" << time << ": collected " << net_count << " network samples, "
-                << sample_count << " samples, freq: " << last_freq << ", rssi: " << avg_rssi
-                << "            " << std::flush;
+                << sample_count << " samples, freq: " << last_freq << ", tx: " << avg_tx << ", rssi: " << avg_rssi
+                << "     " << std::flush;
         }
         
         // try to open network statistics file
