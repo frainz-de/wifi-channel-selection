@@ -105,6 +105,10 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
 
     assert (index != received_series.begin());
 
+    // actual correlation
+    // TODO: resample spec data first and to the correlation afterwards
+
+    // calculate means
     double rx_avg = 0;
     double tx_avg = 0;
     int interval = 0;
