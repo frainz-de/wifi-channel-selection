@@ -15,6 +15,7 @@ Sample::~Sample() {
 
 void Sample::output(std::ostream &stream) {
     //long timecount = timestamp.count();
+    // timestamp, rssi, freq
     long timecount = std::chrono::duration_cast<std::chrono::milliseconds>(timestamp.time_since_epoch()).count();
     stream << timecount << "," << unsigned(rssi) << "," << unsigned(center_freq) << ";\n";
 }

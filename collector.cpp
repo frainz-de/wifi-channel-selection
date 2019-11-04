@@ -180,6 +180,7 @@ void Collector::truncate(std::chrono::milliseconds time) {
 
     for (auto i = tx_series.begin(); tx_series.size() > 2 && std::get<0>(*i) < cuttime;) {
         tx_series.erase(i++);
+        // timestamp, network_activity
         outputtxfile << std::chrono::duration_cast<std::chrono::milliseconds>(std::get<0>(*i).time_since_epoch()).count()
             << ";" << std::get<1>(*i) << ";\n";
     }
