@@ -43,7 +43,7 @@ Collector::Collector(std::string& specinterface, std::string& netinterface) {
     scanfile.open(scanpath ,std::fstream::in | std::fstream::binary);
     if(scanfile.fail()) {
         std::cerr << "Failed to open scan file: " << strerror(errno) << std::endl;
-        throw std::runtime_error("");
+        throw std::runtime_error(std::string{"Failed to open scan file: "} + strerror(errno));
     }
 }
 
