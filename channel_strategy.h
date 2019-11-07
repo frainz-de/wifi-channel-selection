@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <tuple>
+#include <random>
 
 class NeighborManager;
 class Collector;
@@ -46,6 +47,10 @@ protected:
     std::map<std::string, std::tuple<double, std::chrono::time_point<Clock>>> correlations;
     std::map<std::string, int> neighbor_channel_map; // map of neighbor and channel
     std::map<int, std::tuple<double, std::chrono::time_point<Clock>>> channel_power_map; // channel, power, timestamp
+
+    // random number generation
+    std::mt19937_64 generator;
+    std::uniform_real_distribution<double> dist;
 private:
 };
 

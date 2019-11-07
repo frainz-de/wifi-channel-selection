@@ -34,6 +34,12 @@ ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::s
     for (auto i = possible_channels.begin(); i != possible_channels.end(); i++) {
         channel_power_map[*i] = {0, std::chrono::time_point<Clock>::min()};
     }
+
+    std::string stringseed = exec("hostname | md5sum | cut -c 1-16");
+    long seed = std::stol(stringseed, 0, 16);
+    generator = std::mt19937_64(seed);
+    dist = std::uniform_real_distribution<double>(0, 1);
+
 }
 
 void ChannelStrategy::set_net_channel(int freq) {
@@ -157,15 +163,7 @@ int CorrelationChannelStrategy::pick_channel() {
     //TODO: priorize current channel to add inertia
 
     // pick channel by probabilities in map
-//    std::random_device random_device;
-//    std::mt19937_64 engine{random_device()};
-    //std::string stringseed = exec("hostname | md5sum | cut -d' ' -f1");
-    //TODO: initialize rng only once
-    std::string stringseed = exec("hostname | md5sum | cut -c 1-16");
-    long seed = std::stol(stringseed, 0, 16);
-    //int seed = std::stoi(exec("hostname | md5sum | cut -d' ' -f1"));
-    std::mt19937_64 generator(seed);
-    std::uniform_real_distribution<double> dist(0, 1);
+
     double random_number = dist(generator);
 
     int channel = 0;
