@@ -50,7 +50,7 @@ protected:
 
     // random number generation
     std::mt19937_64 generator;
-    std::uniform_real_distribution<double> dist;
+    std::uniform_real_distribution<double> double_dist;
 private:
 };
 
