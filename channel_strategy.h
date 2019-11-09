@@ -51,6 +51,8 @@ protected:
     // random number generation
     std::mt19937_64 generator;
     std::uniform_real_distribution<double> double_dist;
+
+    std::chrono::time_point<Clock> last_checked;
 private:
 };
 
@@ -76,7 +78,6 @@ public:
     virtual void do_something();
 
 private:
-    std::chrono::time_point<Clock> last_checked;
 };
 
 class StaticChannelStrategy: public ChannelStrategy {

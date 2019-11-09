@@ -35,7 +35,7 @@ ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::s
         channel_power_map[*i] = {0, std::chrono::time_point<Clock>::min()};
     }
 
-    std::string stringseed = exec("hostname | md5sum | cut -c 1-16");
+    std::string stringseed = exec("hostname | md5sum | cut -c 1-15");
     long seed = std::stol(stringseed, 0, 16);
     generator = std::mt19937_64(seed);
     double_dist = std::uniform_real_distribution<double>(0, 1);
@@ -221,6 +221,12 @@ int ChannelStrategy::get_netchannel() {return netchannel;}
 
 void CorrelationChannelStrategy::do_something() {
     netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
+
+    std::chrono::time_point now = std::chrono::system_clock::now();
+    if (now - last_checked < std::chrono::seconds(5)) {
+        return;
+    }
+    last_checked = now;
 
     //get neighbor with oldest / no correlation and change spec channel accordingly
 
