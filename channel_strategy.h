@@ -85,3 +85,12 @@ public:
     using ChannelStrategy::ChannelStrategy; // inherit constructors from base class
     virtual void do_something();
 };
+
+class StaticRandomChannelStrategy: public ChannelStrategy {
+public:
+    using ChannelStrategy::ChannelStrategy; // inherit constructors from base class
+    virtual void do_something();
+
+private:
+    int target_netchannel = 0;
+};

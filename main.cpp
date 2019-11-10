@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
         TCLAP::ValueArg<int> freq_arg("f", "frequency",
                 "Frequency to scan at", false, 0, "freq", cmd);
         TCLAP::ValueArg<std::string> strategy_arg("c", "channelstrategy",
-                "Channel selection strategy to use, can be static, random, simple-correlation, correlation", false, "correlation", "strategy type", cmd);
+                "Channel selection strategy to use, can be static, random, static-random, simple-correlation, correlation", false, "correlation", "strategy type", cmd);
         TCLAP::ValueArg<int> verbosity_arg("v", "verbosity",
                 "Amount of output to produce", false, 1, "verbosity", cmd);
         TCLAP::SwitchArg traffic_arg("t", "traffic",

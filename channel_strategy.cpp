@@ -278,7 +278,20 @@ void RandomChannelStrategy::do_something() {
 
     int channel = possible_channels[int_dist(generator)];
     set_net_channel(channel);
-
 }
 
 void StaticChannelStrategy::do_something() {}
+
+void StaticRandomChannelStrategy::do_something() {
+    netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
+
+    if (target_netchannel == 0) {
+        std::uniform_int_distribution<int> int_dist(0, possible_channels.size() - 1);
+        target_netchannel = possible_channels[int_dist(generator)];
+        std::cout << "\n\033[42msetting target netchannel to " + std::to_string(target_netchannel) + "\033[0m\n";
+    }
+
+    if (netchannel != target_netchannel) {
+        set_net_channel(target_netchannel);
+    }
+}
