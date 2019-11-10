@@ -289,7 +289,7 @@ void Collector::run(volatile bool* running) {
         }
 
         std::ifstream rxfile;
-        txfile.open(rxpath, std::fstream::in);
+        rxfile.open(rxpath, std::fstream::in);
         if(rxfile.fail()) {
             std::cerr << "Failed to open network statistics file: " << strerror(errno) << std::endl;
             throw std::runtime_error("");
