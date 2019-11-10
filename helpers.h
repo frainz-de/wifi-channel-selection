@@ -5,6 +5,7 @@
 // global flags from command line arguments
 extern int verbosity;
 extern bool fileoutput;
+extern int random_seed;
 
 void rtrim(std::string &s);
 

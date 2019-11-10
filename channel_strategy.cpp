@@ -37,7 +37,7 @@ ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::s
 
     std::string stringseed = exec("hostname | md5sum | cut -c 1-15");
     long seed = std::stol(stringseed, 0, 16);
-    generator = std::mt19937_64(seed);
+    generator = std::mt19937_64(seed+random_seed);
     double_dist = std::uniform_real_distribution<double>(0, 1);
 
 }

@@ -15,6 +15,7 @@ volatile bool running = true;
 int abortpipe[2];
 int verbosity;
 bool fileoutput;
+int random_seed;
 
 // catch SIGINT to terminate gracefully
 void signalHandler(int sig) {
@@ -53,6 +54,8 @@ int main(int argc, char* argv[]) {
                 "Generate traffic using yes | ncat", cmd);
         TCLAP::SwitchArg fileoutput_arg("", "fileoutput",
                 "Write tx and spec data to csv files (do not use for longer operation)", cmd);
+        TCLAP::ValueArg<int> random_seed_arg("r", "random_seed",
+                "Seed for the RNG", false, 0, "random_seed", cmd);
 
 
         cmd.parse(argc, argv);
@@ -64,6 +67,7 @@ int main(int argc, char* argv[]) {
         verbosity = verbosity_arg.getValue();
         generate_traffic = traffic_arg.getValue();
         fileoutput = fileoutput_arg.getValue();
+        random_seed = random_seed_arg.getValue();
 
     } catch (TCLAP::ArgException &e) {
         std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
