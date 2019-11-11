@@ -108,12 +108,31 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
     // actual correlation
     // TODO: resample spec data first and to the correlation afterwards
 
+    auto rxindex = index;
+    auto rxendindex = received_series.end();
+
+    // resample a part of rx_series to rxvector to simplify later calculations
+    std::vector<double> rxvector;
+    for(auto vindex = txvector.begin(); vindex != txvector.end(); ++vindex) {
+        tx_timestamp += std::chrono::milliseconds(1);
+        double avg_rssi = 0;
+        int avgcounter = 0;
+        while(rxindex != rxendindex &&  (*rxindex)->timestamp < tx_timestamp) {
+            ++avgcounter;
+            ++rxindex;
+            //assert((*findex));
+            //assert(findex != received_series.end());
+        }
+        avg_rssi /= (double) avgcounter;
+        rxvector.push_back(avg_rssi);
+    }
+
+
     // calculate means
     double rx_avg = 0;
     double tx_avg = 0;
     int interval = 0;
-    auto rxindex = index;
-    auto rxendindex = received_series.end();
+    rxindex = index;
 
     for(auto vindex = txvector.begin(); vindex != txvector.end(); ++vindex) {
         tx_timestamp += std::chrono::milliseconds(1);
