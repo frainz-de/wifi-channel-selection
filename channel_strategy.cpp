@@ -222,12 +222,6 @@ int ChannelStrategy::get_netchannel() {return netchannel;}
 void CorrelationChannelStrategy::do_something() {
     netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
 
-    std::chrono::time_point now = std::chrono::system_clock::now();
-    if (now - last_checked < std::chrono::seconds(5)) {
-        return;
-    }
-    last_checked = now;
-
     //get neighbor with oldest / no correlation and change spec channel accordingly
 
     int oldest_scanchannel = get_oldest_power_scanchannel();
@@ -235,14 +229,21 @@ void CorrelationChannelStrategy::do_something() {
         set_spec_channel(oldest_scanchannel);
     }
 
+    if (Clock::now() - last_spec_channel_switch > std::chrono::seconds(1)) {
+        save_power_sample();
+    }
+
+    // set netchannel more rarely
+    std::chrono::time_point now = std::chrono::system_clock::now();
+    if (now - last_checked < std::chrono::seconds(5)) {
+        return;
+    }
+    last_checked = now;
+
     // set networking channel to least used
     int new_channel = pick_channel();
     if (new_channel != netchannel) {
         set_net_channel(new_channel);
-    }
-
-    if (Clock::now() - last_spec_channel_switch > std::chrono::seconds(1)) {
-        save_power_sample();
     }
 }
 
