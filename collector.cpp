@@ -113,6 +113,7 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
 
     // resample a part of rx_series to rxvector to simplify later calculations
     std::vector<double> rxvector;
+    rxvector.reserve(txvector.size());
     for(auto vindex = txvector.begin(); vindex != txvector.end(); ++vindex) {
         tx_timestamp += std::chrono::milliseconds(1);
         double avg_rssi = 0;
@@ -123,11 +124,59 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
             //assert((*findex));
             //assert(findex != received_series.end());
         }
+        //assert(avgcounter != 0);
         avg_rssi /= (double) avgcounter;
         rxvector.push_back(avg_rssi);
     }
 
+    // calculate means
+    auto txsum = std::accumulate(txvector.begin(), txvector.end(), 0);
+    auto txavg = txsum / (double) txvector.size();
 
+    auto rxsum = std::accumulate(rxvector.begin(), rxvector.end(), 0);
+    auto rxavg = rxsum / (double) rxvector.size();
+
+    std::vector<double> central_txvector;
+    //std::transform(txvector.begin(), txvector.end(), central_txvector.begin(),
+    //        [txavg] (double d) -> double { return d - txavg; });
+    for (auto i = txvector.begin(); i != txvector.end(); ++i) {
+        central_txvector.push_back(*i - txavg);
+    }
+
+    std::vector<double> central_rxvector;
+    //std::transform(rxvector.begin(), rxvector.end(), central_rxvector.begin(),
+    //        [rxavg] (double d) -> double { return d - rxavg; });
+    for (auto i = rxvector.begin(); i != rxvector.end(); ++i) {
+        central_rxvector.push_back(*i - rxavg);
+    }
+
+    std::vector<double> product_vector;
+    //std::transform(central_txvector.begin(), central_txvector.end(), central_rxvector.begin(),
+    //        product_vector.begin(), std::multiplies<double>());
+    //for (auto i = central_txvector.begin(), j = central_rxvector.begin(); i != central_txvector.end();
+    for (size_t i = 0; i < central_txvector.size(); ++i) {
+        product_vector.push_back(central_txvector[i] * central_rxvector[i]);
+    }
+
+    auto prodsum = std::accumulate(product_vector.begin(), product_vector.end(), 0);
+
+    std::vector<double> square_txvector;
+    for (auto i = central_txvector.begin(); i != central_txvector.end(); ++i) {
+        square_txvector.push_back((*i) * (*i));
+    }
+    auto square_txsum = std::accumulate(square_txvector.begin(), square_txvector.end(), 0);
+
+    std::vector<double> square_rxvector;
+    for (auto i = central_rxvector.begin(); i != central_rxvector.end(); ++i) {
+        square_rxvector.push_back((*i) * (*i));
+    }
+    auto square_rxsum = std::accumulate(square_rxvector.begin(), square_rxvector.end(), 0);
+
+    auto pearson = prodsum / (std::sqrt(square_txsum) * std::sqrt(square_rxsum));
+
+    return pearson;
+
+    /*
     // calculate means
     double rx_avg = 0;
     double tx_avg = 0;
@@ -182,6 +231,7 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
 
     auto e = prodsum / interval;
     return e;
+    */
 }
 
 // delete everything in the data series exept for the interval given by time
