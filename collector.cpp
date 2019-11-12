@@ -119,21 +119,24 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
         double avg_rssi = 0;
         int avgcounter = 0;
         while(rxindex != rxendindex &&  (*rxindex)->timestamp < tx_timestamp) {
+            avg_rssi += (*rxindex)->rssi;
             ++avgcounter;
             ++rxindex;
             //assert((*findex));
             //assert(findex != received_series.end());
         }
         //assert(avgcounter != 0);
-        avg_rssi /= (double) avgcounter;
+        if (avgcounter != 0) {
+            avg_rssi /= (double) avgcounter;
+        }
         rxvector.push_back(avg_rssi);
     }
 
     // calculate means
-    auto txsum = std::accumulate(txvector.begin(), txvector.end(), 0);
+    auto txsum = std::accumulate(txvector.begin(), txvector.end(), 0.0d);
     auto txavg = txsum / (double) txvector.size();
 
-    auto rxsum = std::accumulate(rxvector.begin(), rxvector.end(), 0);
+    auto rxsum = std::accumulate(rxvector.begin(), rxvector.end(), 0.0d);
     auto rxavg = rxsum / (double) rxvector.size();
 
     std::vector<double> central_txvector;
@@ -158,21 +161,21 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
         product_vector.push_back(central_txvector[i] * central_rxvector[i]);
     }
 
-    auto prodsum = std::accumulate(product_vector.begin(), product_vector.end(), 0);
+    double prodsum = std::accumulate(product_vector.begin(), product_vector.end(), 0.0d);
 
     std::vector<double> square_txvector;
     for (auto i = central_txvector.begin(); i != central_txvector.end(); ++i) {
         square_txvector.push_back((*i) * (*i));
     }
-    auto square_txsum = std::accumulate(square_txvector.begin(), square_txvector.end(), 0);
+    double square_txsum = std::accumulate(square_txvector.begin(), square_txvector.end(), 0.0d);
 
     std::vector<double> square_rxvector;
     for (auto i = central_rxvector.begin(); i != central_rxvector.end(); ++i) {
         square_rxvector.push_back((*i) * (*i));
     }
-    auto square_rxsum = std::accumulate(square_rxvector.begin(), square_rxvector.end(), 0);
+    double square_rxsum = std::accumulate(square_rxvector.begin(), square_rxvector.end(), 0.0d);
 
-    auto pearson = prodsum / (std::sqrt(square_txsum) * std::sqrt(square_rxsum));
+    double pearson = prodsum / (std::sqrt(square_txsum) * std::sqrt(square_rxsum));
 
     return pearson;
 
