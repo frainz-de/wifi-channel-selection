@@ -56,6 +56,7 @@ public:
 
     nlohmann::json get_tx(size_t max_size);
     double correlate(const std::vector<double>& txvector, long timeint);
+    double kkf_max(const std::vector<double>& txvector, long timeint);
     std::tuple<int, double, std::chrono::time_point<Clock>> get_rx_power(std::chrono::milliseconds duration);
 
     void truncate(std::chrono::milliseconds time);

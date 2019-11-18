@@ -25,6 +25,7 @@ public:
     void save_power_sample();
     void record_channel(std::string address, int freq);
     void set_collector(Collector* collector);
+    void print_correlations();
 
 protected:
     NeighborManager* neighbor_manager;

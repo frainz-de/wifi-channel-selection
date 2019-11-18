@@ -18,6 +18,7 @@ extern "C" {
 #include <sys/timerfd.h>
 #include <sys/poll.h>
 #include <unistd.h>
+#include <climits>
 
 Collector::Collector(std::string& specinterface, std::string& netinterface) {
     
@@ -80,6 +81,22 @@ nlohmann::json Collector::get_tx(size_t max_size) {
     txmsg["txdata"] = txdata;
     txmsg["timestamp"] = current_time.count();
     return txmsg;
+}
+
+double Collector::kkf_max(const std::vector<double>& txvector, long timeint) {
+    double max = LONG_MIN;
+    for(long shift = -1000; shift <= 1000; shift+=10) {
+        double corr = correlate(txvector, timeint + shift);
+        if(corr >= max) {
+            max = corr;
+        }
+    }
+    assert(!std::isnan(max));
+    if(max == LONG_MIN) {
+        return nan("");
+    } else {
+        return max;
+    }
 }
 
 double Collector::correlate(const std::vector<double>& txvector, long timeint) {

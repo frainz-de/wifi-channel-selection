@@ -219,6 +219,17 @@ int ChannelStrategy::get_specchannel() {return specchannel;}
 int ChannelStrategy::get_netchannel() {return netchannel;}
 
 
+void ChannelStrategy::print_correlations() {
+    //nlohmann::json correlations_json = nlohmann::to_json<(correlations);
+    nlohmann::json correlations_json;
+    for( auto i = correlations.begin(); i != correlations.end(); i++) {
+        correlations_json[std::get<0>(*i)] = std::get<0>(std::get<1>(*i));
+    }
+    std::ofstream file("/root/correlations.json");
+    file << correlations_json;
+}
+
+
 void CorrelationChannelStrategy::do_something() {
     netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
 

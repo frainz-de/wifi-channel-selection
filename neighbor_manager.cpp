@@ -224,7 +224,8 @@ void NeighborManager::receive_message(int sockfd) {
             txdata.get_to(txvector);
             auto timestamp = msg_json["txmsg"]["timestamp"];
             assert (txdata.size() == txvector.size());
-            auto correlation = collector->correlate(txdata, timestamp);
+            //auto correlation = collector->correlate(txdata, timestamp);
+            auto correlation = collector->kkf_max(txdata, timestamp);
             //correlations[msg_json.at("self").at("address")] = correlation;
             if(!std::isnan(correlation)) {
                 channel_strategy->save_correlation(msg_json.at("self").at("address"), correlation,
@@ -302,5 +303,7 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
         }
 
     }
+    channel_strategy->print_correlations();
+
 
 }
