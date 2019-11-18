@@ -62,6 +62,10 @@ void NeighborManager::set_collector(Collector* collector) {
     channel_strategy->set_collector(collector);
 }
 
+std::set<std::string> NeighborManager::get_partners() {
+    return neighbors_neighbors;
+}
+
 void NeighborManager::scan() {
     // TODO: scan regularly
 

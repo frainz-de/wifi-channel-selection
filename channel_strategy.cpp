@@ -86,7 +86,12 @@ void ChannelStrategy::set_spec_channel(int freq) {
 void ChannelStrategy::save_correlation(std::string address, double correlation,
         std::chrono::time_point<Clock> timestamp) {
 
-    correlations[address] = {correlation, timestamp};
+    if(correlations.find(address) != correlations.end()) {
+        double new_average = correlation*0.4d + std::get<0>(correlations[address])*0.6d;
+        correlations[address] = {new_average, timestamp};
+    } else {
+        correlations[address] = {correlation, timestamp};
+    }
     //correlations.insert_or_assign({address, {correlation, timestamp}});
     std::cout << "\nnoting correlation \e[33m" + std::to_string(correlation)
         + "\e[36m for neighbor \e[36m" + address + "\e[0m\n";
@@ -229,6 +234,17 @@ void ChannelStrategy::print_correlations() {
     file << correlations_json;
 }
 
+bool ChannelStrategy::enough_correlations() {
+    bool complete = true;
+    std::set<std::string> partners = neighbor_manager->get_partners();
+    for(auto i = partners.begin(); i != partners.end(); i++) {
+        if(correlations.find(*i) == correlations.end()) {
+            complete = false;
+        }
+    }
+
+    return complete;
+}
 
 void CorrelationChannelStrategy::do_something() {
     netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
@@ -251,6 +267,10 @@ void CorrelationChannelStrategy::do_something() {
     }
     last_checked = now;
 
+    // check if we have enough data
+    if (!enough_correlations()) {
+        return;
+    }
     // set networking channel to least used
     int new_channel = pick_channel();
     if (new_channel != netchannel) {

@@ -24,6 +24,7 @@ public:
     //int get_freq_from_neighbor(std::string address);
 
     std::thread start_thread(volatile bool* running, int abortpipe);
+    std::set<std::string> get_partners();
     
 private:
     void scan();
