@@ -10,6 +10,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cmath>
+#include <iomanip>
 
 
 ChannelStrategy::ChannelStrategy(NeighborManager* neighbor_manager, const std::string& specinterface, const std::string& netinterface):
@@ -139,17 +140,36 @@ int CorrelationChannelStrategy::pick_channel() {
     }
 
     // apply penalties for correlations
-    // assume values from 0 to 1, maximum penalty: 20%
+    // assume values from 0 to 1, maximum penalty: 60%
+    // values usually go from 0 to 0.3
     for (auto i = correlations.begin(); i != correlations.end(); i++) {
-        channel_probabilities[neighbor_channel_map[i->first]] *= 1 - std::get<0>(i->second)*0.2;
+        channel_probabilities[neighbor_channel_map[i->first]] *= 1 - std::get<0>(i->second)*0.6/0.3;
     }
     // apply penalties for received power
     // assume values from 0 to 20, maximum penalty: 20%
     for (auto i = channel_power_map.begin(); i != channel_power_map.end(); i++) {
         channel_probabilities[i->first] *= 1 - std::get<0>(i->second)*0.05*0.2;
     }
+    // apply penalty for neighbors channel
+    auto direct_neighbors = neighbor_manager->get_direct_neighbors();
+    //for (auto i = neighbor_channel_map.begin(); i != neighbor_channel_map.end(); i++) {
+    //    channel_probabilities[std::get<1>(*i)] *= (1-0.4d);
+    for (auto i = direct_neighbors.begin(); i != direct_neighbors.end(); i++) {
+        channel_probabilities[neighbor_channel_map[*i]] *= (1-0.4d);
+    }
+
     // apply gain for current channel to add inertia: 20%
     channel_probabilities[netchannel] *= 1.2d;
+
+    double max = 0;
+    std::string max_addr;
+    for( auto i = channel_probabilities.begin(); i != channel_probabilities.end(); i++) {
+        double prob = std::get<1>(*i);
+        if(prob > max) {
+            max = prob;
+            max_addr = std::get<0>(*i);
+        }
+    }
 
     // normalize
     double sum = 0;
@@ -165,7 +185,6 @@ int CorrelationChannelStrategy::pick_channel() {
     //    proper_sum += element.second;
     //}
 
-    //TODO: priorize current channel to add inertia
 
     // pick channel by probabilities in map
 
@@ -234,16 +253,30 @@ void ChannelStrategy::print_correlations() {
     file << correlations_json;
 }
 
+void ChannelStrategy::print_neighbor_channels() {
+    nlohmann::json neighbor_channels_json;
+    for(auto i = neighbor_channel_map.begin(); i != neighbor_channel_map.end(); i++) {
+        neighbor_channels_json[std::get<0>(*i)] = std::get<1>(*i);
+    }
+    neighbor_channels_json[neighbor_manager->get_own_address()] = netchannel;
+    std::ofstream file("/root/neighbor_channels.json");
+    file << neighbor_channels_json;
+}
+
 bool ChannelStrategy::enough_correlations() {
     bool complete = true;
-    std::set<std::string> partners = neighbor_manager->get_partners();
+    int counter = 0;
+    std::set<std::string> partners = neighbor_manager->get_neighbors();
     for(auto i = partners.begin(); i != partners.end(); i++) {
         if(correlations.find(*i) == correlations.end()) {
             complete = false;
+        } else {
+            counter++;
         }
     }
 
-    return complete;
+    return (counter >= 0.65 * partners.size());
+    //return complete;
 }
 
 void CorrelationChannelStrategy::do_something() {
@@ -267,8 +300,14 @@ void CorrelationChannelStrategy::do_something() {
     }
     last_checked = now;
 
+
     // check if we have enough data
+    //std::cout << std::put_time(init_time);
+    //if(std::chrono::system_clock::now() - init_time < std::chrono::seconds(90)) {
+        //std::cout << "\ntoo early to change channel\n";
+    //}
     if (!enough_correlations()) {
+        std::cout << "\nnot enough correlations to change channel\n";
         return;
     }
     // set networking channel to least used

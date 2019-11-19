@@ -26,6 +26,7 @@ public:
     void record_channel(std::string address, int freq);
     void set_collector(Collector* collector);
     void print_correlations();
+    void print_neighbor_channels();
 
 protected:
     NeighborManager* neighbor_manager;
@@ -55,6 +56,7 @@ protected:
     std::uniform_real_distribution<double> double_dist;
 
     std::chrono::time_point<Clock> last_checked;
+    std::chrono::time_point<Clock> init_time = std::chrono::system_clock::now();
 private:
 };
 

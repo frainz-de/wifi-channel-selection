@@ -24,6 +24,11 @@ void signalHandler(int sig) {
         signal(SIGINT, SIG_DFL);
         write(abortpipe[1], "a", 1);
     }
+    if(sig == SIGTERM) {
+        running = false;
+        signal(SIGTERM, SIG_DFL);
+        write(abortpipe[1], "a", 1);
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -79,6 +84,7 @@ int main(int argc, char* argv[]) {
     }
 
     signal(SIGINT, signalHandler);
+    signal(SIGTERM, signalHandler);
 
     // create pipe to abort select calls
     pipe(abortpipe);

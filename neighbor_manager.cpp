@@ -54,7 +54,7 @@ std::thread NeighborManager::start_thread(volatile bool* running, int abortpipe)
 void NeighborManager::scanandsend() {
     scan();
     send_neighbors();
-    send_tx();
+    //send_tx();
 }
 
 void NeighborManager::set_collector(Collector* collector) {
@@ -62,9 +62,14 @@ void NeighborManager::set_collector(Collector* collector) {
     channel_strategy->set_collector(collector);
 }
 
-std::set<std::string> NeighborManager::get_partners() {
+std::set<std::string> NeighborManager::get_neighbors() {
     return neighbors_neighbors;
 }
+
+std::set<std::string> NeighborManager::get_direct_neighbors() {
+    return neighbors;
+}
+std::string NeighborManager::get_own_address() {return own_address;}
 
 void NeighborManager::scan() {
     // TODO: scan regularly
@@ -90,7 +95,7 @@ void NeighborManager::scan() {
 
         delete[] neighbors_cstr;
     }
-    neighbors = neighbor_list;
+    neighbors.insert(neighbor_list.begin(), neighbor_list.end());
     neighbors_neighbors.insert(neighbors.begin(), neighbors.end());
 
     std::replace(neighbor_string.begin(), neighbor_string.end(), '\n', ',');
@@ -308,6 +313,7 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
 
     }
     channel_strategy->print_correlations();
+    channel_strategy->print_neighbor_channels();
 
 
 }
