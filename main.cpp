@@ -16,6 +16,7 @@ int abortpipe[2];
 int verbosity;
 bool fileoutput;
 int random_seed;
+std::vector<int> possible_channels = {5180,5200,5220,5240,5745,5765,5785,5805,5825};
 
 // catch SIGINT to terminate gracefully
 void signalHandler(int sig) {
@@ -61,6 +62,8 @@ int main(int argc, char* argv[]) {
                 "Write tx and spec data to csv files (do not use for longer operation)", cmd);
         TCLAP::ValueArg<int> random_seed_arg("r", "random_seed",
                 "Seed for the RNG", false, 0, "random_seed", cmd);
+        TCLAP::ValueArg<size_t> limit_channel_arg("l", "limit_channels",
+                "Limit the number of channels to <limit_channels>", false, 0, "limit_channels", cmd);
 
 
         cmd.parse(argc, argv);
@@ -73,6 +76,10 @@ int main(int argc, char* argv[]) {
         generate_traffic = traffic_arg.getValue();
         fileoutput = fileoutput_arg.getValue();
         random_seed = random_seed_arg.getValue();
+        auto limit_channel = limit_channel_arg.getValue();
+        if (limit_channel != 0 && limit_channel < possible_channels.size()) {
+            possible_channels.resize(limit_channel);
+        }
 
     } catch (TCLAP::ArgException &e) {
         std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
