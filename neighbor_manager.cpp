@@ -293,6 +293,8 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
     //itimerspec time = {};
     //timerfd_gettime(timerfd, &time);
 
+    std::chrono::time_point<std::chrono::system_clock> last_lt_op = std::chrono::system_clock::now();
+
     while (*running) {
         //std::fill(buffer.begin(), buffer.end(), 0);
         poll(pfds, 3, -1);
@@ -307,8 +309,11 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
             channel_strategy->do_something();
             send_tx();
 
-            collector->truncate(std::chrono::seconds(20));
-            //TODO: write to files while or before truncating
+            if(std::chrono::system_clock::now() - last_lt_op >= std::chrono::seconds(10)) {
+                last_lt_op = std::chrono::system_clock::now();
+                send_neighbors();
+                collector->truncate(std::chrono::seconds(20));
+            }
         }
 
     }
