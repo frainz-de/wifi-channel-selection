@@ -57,6 +57,7 @@ protected:
 
     std::chrono::time_point<Clock> last_checked;
     std::chrono::time_point<Clock> init_time = std::chrono::system_clock::now();
+    std::chrono::time_point<Clock> next_change = std::chrono::time_point<Clock>::min();
 private:
 };
 

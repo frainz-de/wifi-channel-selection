@@ -294,11 +294,18 @@ void CorrelationChannelStrategy::do_something() {
     }
 
     // set netchannel more rarely
-    std::chrono::time_point now = std::chrono::system_clock::now();
-    if (now - last_checked < std::chrono::seconds(5)) {
+    //std::chrono::time_point now = std::chrono::system_clock::now();
+    //if (now - last_checked < std::chrono::seconds(5)) {
+    //    return;
+    //}
+    //last_checked = now;
+
+    if(Clock::now() < next_change) {
         return;
     }
-    last_checked = now;
+
+    std::uniform_int_distribution<int> int_dist(30, 60);
+    next_change = Clock::now() + std::chrono::seconds(int_dist(generator));
 
 
     // check if we have enough data
