@@ -27,6 +27,7 @@ public:
     std::set<std::string> get_neighbors();
     std::set<std::string> get_direct_neighbors();
     std::string get_own_address();
+    void print_neighbors();
     
 private:
     void scan();

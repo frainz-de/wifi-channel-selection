@@ -100,8 +100,8 @@ void ChannelStrategy::save_correlation(std::string address, double correlation,
 
 void ChannelStrategy::save_power_sample() {
     try {
-    auto rx_power = collector->get_rx_power(std::chrono::seconds(1));
-    channel_power_map[std::get<0>(rx_power)] = {std::get<1>(rx_power), std::get<2>(rx_power)};
+        auto rx_power = collector->get_rx_power(std::chrono::seconds(1));
+        channel_power_map[std::get<0>(rx_power)] = {std::get<1>(rx_power), std::get<2>(rx_power)};
     } catch (std::runtime_error& e) {
         std::cerr << "\n" + std::string(e.what()) + "\n";
     }
@@ -143,33 +143,35 @@ int CorrelationChannelStrategy::pick_channel() {
     // assume values from 0 to 1, maximum penalty: 60%
     // values usually go from 0 to 0.3
     for (auto i = correlations.begin(); i != correlations.end(); i++) {
-        channel_probabilities[neighbor_channel_map[i->first]] *= 1 - std::get<0>(i->second)*0.6/0.3;
+        channel_probabilities[neighbor_channel_map[i->first]] *= 1.0d - std::get<0>(i->second)*0.6d/0.3d;
     }
     // apply penalties for received power
     // assume values from 0 to 20, maximum penalty: 20%
     for (auto i = channel_power_map.begin(); i != channel_power_map.end(); i++) {
-        channel_probabilities[i->first] *= 1 - std::get<0>(i->second)*0.05*0.2;
+        channel_probabilities[i->first] *= 1.0d - std::get<0>(i->second)*0.05d*0.2d;
     }
     // apply penalty for neighbors channel
     auto direct_neighbors = neighbor_manager->get_direct_neighbors();
     //for (auto i = neighbor_channel_map.begin(); i != neighbor_channel_map.end(); i++) {
     //    channel_probabilities[std::get<1>(*i)] *= (1-0.4d);
     for (auto i = direct_neighbors.begin(); i != direct_neighbors.end(); i++) {
-        channel_probabilities[neighbor_channel_map[*i]] *= (1-0.4d);
+        channel_probabilities[neighbor_channel_map[*i]] *= (1.0d-0.3d);
     }
 
     // apply gain for current channel to add inertia: 20%
     channel_probabilities[netchannel] *= 1.2d;
 
     double max = 0;
-    std::string max_addr;
+    int max_chan;
     for( auto i = channel_probabilities.begin(); i != channel_probabilities.end(); i++) {
         double prob = std::get<1>(*i);
         if(prob > max) {
             max = prob;
-            max_addr = std::get<0>(*i);
+            max_chan = std::get<0>(*i);
         }
     }
+
+    return max_chan;
 
     // normalize
     double sum = 0;
@@ -250,7 +252,7 @@ void ChannelStrategy::print_correlations() {
         correlations_json[std::get<0>(*i)] = std::get<0>(std::get<1>(*i));
     }
     std::ofstream file("/root/correlations.json");
-    file << correlations_json;
+    file << correlations_json << std::endl;
 }
 
 void ChannelStrategy::print_neighbor_channels() {
@@ -260,7 +262,17 @@ void ChannelStrategy::print_neighbor_channels() {
     }
     neighbor_channels_json[neighbor_manager->get_own_address()] = netchannel;
     std::ofstream file("/root/neighbor_channels.json");
-    file << neighbor_channels_json;
+    file << neighbor_channels_json << std::endl;
+}
+
+void ChannelStrategy::print_power_samples() {
+    nlohmann::json power_samples_json;
+    for(auto i = channel_power_map.begin(); i != channel_power_map.end(); i++) {
+        std::string channel = std::to_string(std::get<0>(*i));
+        power_samples_json[channel] = std::get<0>(std::get<1>(*i));
+        std::ofstream file("/root/power_samples.json");
+        file << power_samples_json << std::endl;
+    }
 }
 
 bool ChannelStrategy::enough_correlations() {

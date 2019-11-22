@@ -55,6 +55,16 @@ void NeighborManager::scanandsend() {
     scan();
     send_neighbors();
     //send_tx();
+
+    if (power_reduction) {
+        // decrease power for each neighbor
+        int number_of_neighbors = std::min(5, (int) neighbors.size());
+        int power = (23.0d - 2.6d*number_of_neighbors) * 100;
+        exec("iw dev " + netinterface + " set txpower limit " + std::to_string(power));
+        std::cout << "\nsetting transmission power to " + std::to_string(power) + "\n";
+    } else {
+        exec("iw dev " + netinterface + " set power limit 2300");
+    }
 }
 
 void NeighborManager::set_collector(Collector* collector) {
@@ -156,6 +166,14 @@ void NeighborManager::send_tx() {
 //int NeighborManager::get_freq_from_neighbor(std::string address) {
 //    return channels.at(address);
 //}
+
+void NeighborManager::print_neighbors() {
+    nlohmann::json neighbors_json;
+    neighbors_json["direct_neighbors"] = neighbors;
+    neighbors_json["neighbors_neighbors"] = neighbors_neighbors;
+    std::ofstream file("/root/neighbors.json");
+    file << neighbors_json << std::endl;
+}
 
 void NeighborManager::receive_message(int sockfd) {
     std::vector<char> buffer(65535);
@@ -319,6 +337,8 @@ void NeighborManager::run(volatile bool* running, int abortpipe) {
     }
     channel_strategy->print_correlations();
     channel_strategy->print_neighbor_channels();
+    channel_strategy->print_power_samples();
+    print_neighbors();
 
 
 }

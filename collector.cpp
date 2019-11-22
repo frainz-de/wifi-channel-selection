@@ -116,7 +116,7 @@ double Collector::correlate(const std::vector<double>& txvector, long timeint) {
 
     // we hit the beginning of the sample list => abort
     if (index == --received_series.begin()) {
-        std::cerr << "\n\033[31mnot enough data for correlation\033[0m\n";
+        //std::cerr << "\n\033[31mnot enough data for correlation\033[0m\n";
         return nan("");
     }
 

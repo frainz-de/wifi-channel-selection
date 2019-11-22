@@ -27,6 +27,7 @@ public:
     void set_collector(Collector* collector);
     void print_correlations();
     void print_neighbor_channels();
+    void print_power_samples();
 
 protected:
     NeighborManager* neighbor_manager;

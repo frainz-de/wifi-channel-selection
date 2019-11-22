@@ -8,6 +8,7 @@ extern int verbosity;
 extern bool fileoutput;
 extern int random_seed;
 extern std::vector<int> possible_channels;
+extern bool power_reduction;
 
 void rtrim(std::string &s);
 

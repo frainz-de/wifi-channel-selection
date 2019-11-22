@@ -17,6 +17,7 @@ int verbosity;
 bool fileoutput;
 int random_seed;
 std::vector<int> possible_channels = {5180,5200,5220,5240,5745,5765,5785,5805,5825};
+bool power_reduction = false;
 
 // catch SIGINT to terminate gracefully
 void signalHandler(int sig) {
@@ -64,6 +65,8 @@ int main(int argc, char* argv[]) {
                 "Seed for the RNG", false, 0, "random_seed", cmd);
         TCLAP::ValueArg<size_t> limit_channel_arg("l", "limit_channels",
                 "Limit the number of channels to <limit_channels>", false, 0, "limit_channels", cmd);
+        TCLAP::SwitchArg power_arg("p", "power",
+                "Activate power reduction", cmd);
 
 
         cmd.parse(argc, argv);
@@ -80,6 +83,7 @@ int main(int argc, char* argv[]) {
         if (limit_channel != 0 && limit_channel < possible_channels.size()) {
             possible_channels.resize(limit_channel);
         }
+        power_reduction = power_arg.getValue();
 
     } catch (TCLAP::ArgException &e) {
         std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
