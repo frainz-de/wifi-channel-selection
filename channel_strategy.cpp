@@ -295,7 +295,7 @@ void CorrelationChannelStrategy::do_something() {
     netchannel = stoi(exec("iw dev " + netinterface + " info | grep channel | awk '{print $3}' | tr -d '('"));
 
     //get neighbor with oldest / no correlation and change spec channel accordingly
-
+    //TODO replace by prioritized scan channel choice
     int oldest_scanchannel = get_oldest_power_scanchannel();
     if (oldest_scanchannel != specchannel && oldest_scanchannel != 0) {
         set_spec_channel(oldest_scanchannel);
