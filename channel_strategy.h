@@ -44,7 +44,7 @@ protected:
     void set_spec_channel(int freq);
     std::chrono::time_point<Clock> last_spec_channel_switch = Clock::now();
     int get_oldest_neighbor_scanchannel();
-    int get_oldest_power_scanchannel();
+    std::tuple<int, std::chrono::time_point<Clock>> get_oldest_power_scanchannel();
     bool enough_correlations();
 
     // map of address and tuple of correlation and timestamp
@@ -68,6 +68,7 @@ public:
     virtual void do_something();
 private:
     int pick_channel();
+    int pick_scanchannel();
 };
 
 class SimpleCorrelationChannelStrategy: public ChannelStrategy {

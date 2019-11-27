@@ -207,6 +207,15 @@ int CorrelationChannelStrategy::pick_channel() {
     return least_used->first;
 }
 
+int CorrelationChannelStrategy::pick_scanchannel() {
+    auto powchan_and_time = get_oldest_power_scanchannel();
+    if (std::get<1>(powchan_and_time) < Clock::now() - std::chrono::seconds(30)) {
+        return std::get<0>(powchan_and_time);
+    } else {
+        return get_oldest_neighbor_scanchannel();
+    }
+}
+
 int ChannelStrategy::get_oldest_neighbor_scanchannel() {
     // get neighbor with oldest / no correlation and change spec channel accordingly
     std::pair<std::string, std::tuple<double, std::chrono::time_point<Clock>>> oldest
@@ -225,7 +234,7 @@ int ChannelStrategy::get_oldest_neighbor_scanchannel() {
     }
 }
 
-int ChannelStrategy::get_oldest_power_scanchannel() {
+std::tuple<int, std::chrono::time_point<Clock>> ChannelStrategy::get_oldest_power_scanchannel() {
     std::pair<int, std::tuple<double, std::chrono::time_point<Clock>>> oldest
         = {0, {0, std::chrono::time_point<Clock>::max()}};
 
@@ -236,9 +245,9 @@ int ChannelStrategy::get_oldest_power_scanchannel() {
         }
     }
 
-    auto size = channel_power_map.size();
+    //auto size = channel_power_map.size();
 
-    return oldest.first;
+    return {oldest.first, std::get<1>(oldest.second)};
 }
 
 int ChannelStrategy::get_specchannel() {return specchannel;}
@@ -276,13 +285,10 @@ void ChannelStrategy::print_power_samples() {
 }
 
 bool ChannelStrategy::enough_correlations() {
-    bool complete = true;
     int counter = 0;
     std::set<std::string> partners = neighbor_manager->get_neighbors();
     for(auto i = partners.begin(); i != partners.end(); i++) {
-        if(correlations.find(*i) == correlations.end()) {
-            complete = false;
-        } else {
+        if(correlations.find(*i) != correlations.end()) {
             counter++;
         }
     }
@@ -296,9 +302,11 @@ void CorrelationChannelStrategy::do_something() {
 
     //get neighbor with oldest / no correlation and change spec channel accordingly
     //TODO replace by prioritized scan channel choice
-    int oldest_scanchannel = get_oldest_power_scanchannel();
-    if (oldest_scanchannel != specchannel && oldest_scanchannel != 0) {
-        set_spec_channel(oldest_scanchannel);
+    //int new_scanchannel = std::get<0>(get_oldest_power_scanchannel());
+    int new_scanchannel = pick_scanchannel();
+
+    if (new_scanchannel != specchannel && new_scanchannel != 0) {
+        set_spec_channel(new_scanchannel);
     }
 
     if (Clock::now() - last_spec_channel_switch > std::chrono::seconds(1)) {
@@ -326,7 +334,7 @@ void CorrelationChannelStrategy::do_something() {
         //std::cout << "\ntoo early to change channel\n";
     //}
     if (!enough_correlations()) {
-        std::cout << "\nnot enough correlations to change channel\n";
+        std::cout << "\n\e[41mnot enough correlations to change channel\033[0m\n";
         return;
     }
     // set networking channel to least used
